@@ -1,10 +1,9 @@
 import { isAllowed } from "../../../../shared/allowed-country-list";
-import { getGiftCardOrderId, isGiftCardAvailable } from "../../../../shared/helpers";
-import { GiftCard, OrderTransaction } from "../../../../shared/types";
+import { getGiftCardOrderId } from "../../../../shared/helpers";
+import { GiftCard, OrderTransaction, Product } from "../../../../shared/types";
 import { AppState } from "../app-state";
-import { getGiftCardHtml } from "./gift-card";
+import { getGiftCardHtml, getSingleGiftCardHtml } from "./gift-card";
 import { detectCardsEnv, getApiBaseUrl, getUserCountryCode } from "./helpers";
-import { attachMintAction } from "./mint/mint-action";
 import { getRedeemCodeHtml } from "./reveal/redeem-code-html";
 import { attachRevealAction } from "./reveal/reveal-action";
 
@@ -30,9 +29,6 @@ export async function initClaimGiftCard(app: AppState) {
     return;
   }
 
-  const retrieveOrderUrl = `${getApiBaseUrl()}/get-order?orderId=${getGiftCardOrderId(app.reward.beneficiary, app.reward.signature)}`;
-  const bestCardUrl = `${getApiBaseUrl()}/get-best-card?country=${countryCode}&amount=${app.reward.amount}`;
-
   const requestInit = {
     method: "GET",
     headers: {
@@ -40,9 +36,19 @@ export async function initClaimGiftCard(app: AppState) {
     },
   };
 
-  const [orderResponse, bestCardResponse] = await Promise.all([fetch(retrieveOrderUrl, requestInit), fetch(bestCardUrl, requestInit)]);
+  const retrieveProductsUrl = `${getApiBaseUrl()}/bootstrap?page=1`;
+  const productsResponse = await fetch(retrieveProductsUrl, requestInit);
 
-  const giftCard = (await bestCardResponse.json()) as GiftCard;
+  if (productsResponse.status == 200) {
+    const products = (await productsResponse.json()).products as Product[];
+    console.log("products", products);
+
+    addProductsHtml(products, app, giftCardsSection);
+  }
+
+  const retrieveOrderUrl = `${getApiBaseUrl()}/get-order?orderId=${getGiftCardOrderId(app.reward.beneficiary, app.reward.signature)}`;
+
+  const [orderResponse] = await Promise.all([fetch(retrieveOrderUrl, requestInit)]);
 
   if (orderResponse.status == 200) {
     const { transaction, product } = (await orderResponse.json()) as {
@@ -51,12 +57,6 @@ export async function initClaimGiftCard(app: AppState) {
     };
 
     addPurchasedCardHtml(product, transaction, app, giftCardsSection);
-  } else if (bestCardResponse.status == 200) {
-    const availableGiftCard = isGiftCardAvailable(giftCard, app.reward.amount) ? giftCard : null;
-
-    addAvailableCardsHtml(availableGiftCard, app, giftCardsSection);
-  } else if (bestCardResponse.status == 404) {
-    giftCardsSection.innerHTML = "<p class='card-error'>There are no card available to claim at the moment.</p>";
   } else {
     giftCardsSection.innerHTML = "<p class='card-error'>There was a problem in fetching gift cards. Please try again later.</p>";
   }
@@ -73,16 +73,22 @@ function addPurchasedCardHtml(giftCard: GiftCard | null, transaction: OrderTrans
   attachRevealAction(transaction, app);
 }
 
-function addAvailableCardsHtml(giftCard: GiftCard | null, app: AppState, giftCardsSection: HTMLElement) {
-  const htmlParts: string[] = [];
+function addProductsHtml(products: Product[], app: AppState, giftCardsSection: HTMLElement) {
+  console.log("giftCardsSection", giftCardsSection);
 
-  htmlParts.push(`<h2 class="card-heading">Or mint a payment card</h2>`);
-  if (giftCard) {
-    htmlParts.push(getGiftCardHtml(giftCard, app.reward.amount));
-    giftCardsSection.innerHTML = htmlParts.join("");
-    attachMintAction(giftCard, app);
+  const htmlParts: string[] = [];
+  htmlParts.push(`<h2 class="card-heading">Available gift cards</h2>`);
+
+  if (products.length > 0) {
+    products.forEach((product: Product) => {
+      if (product.status === "ACTIVE") {
+        htmlParts.push(getSingleGiftCardHtml(product as GiftCard));
+      }
+    });
   } else {
-    htmlParts.push(`<p class="card-error">There are no cards available to mint at the moment.</p>`);
-    giftCardsSection.innerHTML = htmlParts.join("");
+    alert();
+    htmlParts.push(`<p class="card-error">There are no gift cards available at the moment.</p>`);
   }
+  console.log(htmlParts);
+  giftCardsSection.innerHTML = htmlParts.join("");
 }
