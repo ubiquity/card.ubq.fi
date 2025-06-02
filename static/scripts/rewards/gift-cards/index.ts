@@ -1,4 +1,3 @@
-import { isAllowed } from "../../../../shared/allowed-country-list";
 import { getGiftCardOrderId } from "../../../../shared/helpers";
 import { GiftCard, OrderTransaction, Product } from "../../../../shared/types";
 import { AppState } from "../app-state";
@@ -21,11 +20,6 @@ export async function initClaimGiftCard(app: AppState) {
 
   if (!countryCode) {
     giftCardsSection.innerHTML = `<p class="card-error">Failed to load suitable virtual cards for you. Refresh or try disabling adblocker.</p>`;
-    return;
-  }
-
-  if (!isAllowed(countryCode)) {
-    giftCardsSection.innerHTML = `<p class="card-error">Virtual cards are not available for your location. Use other methods to claim your reward.</p>`;
     return;
   }
 
