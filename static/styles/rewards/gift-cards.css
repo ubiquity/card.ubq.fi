@@ -8,22 +8,20 @@
 }
 
 #gift-cards {
-  padding-top: 44px;
   display: flex;
-  flex-direction: column;
-  max-width: 563px;
+  flex-direction: row;
   width: 100vw;
-  align-items: center;
+  justify-content: center;
   row-gap: 12px;
   position: relative;
+  flex-wrap: wrap;
 }
 
 .card-section {
   overflow-wrap: break-word;
   text-transform: none;
   background-color: var(--background-color-default);
-  padding: 24px;
-  width: 100%;
+  padding: 12px;
   text-align: center;
   box-sizing: border-box;
   box-shadow: inset 0 0 96px #00bfff10;
@@ -32,10 +30,6 @@
 .card-error {
   text-align: center;
   padding: 0 12px;
-}
-
-#offered-card {
-  display: flex;
 }
 
 @media screen and (max-width: 640px) {
@@ -67,9 +61,6 @@
 }
 
 .card-section img {
-  box-sizing: border-box;
-  width: 100%;
-  height: auto;
   border: 2px solid var(--border-color);
   max-width: 200px;
 }
@@ -192,4 +183,127 @@
   .btn .icon {
     opacity: 0.5;
   }
+}
+
+.card-section .pricing .available {
+  flex-wrap: wrap; /* Allows items to wrap to the next line */
+  gap: 8px; /* Adds space between price options */
+  justify-content: center; /* Centers the options when they wrap */
+}
+
+/* Styles specifically for the fixed denomination options */
+.card-section .pricing .fixed-denominations {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center; /* Centers the fixed amount options */
+  gap: 12px; /* Spacing between individual fixed amounts */
+  width: 100%; /* Ensures it takes full width within its container */
+}
+
+/* Styling for each individual fixed amount option (e.g., "$10", "$25") */
+.card-section .pricing .amount-option {
+  display: flex;
+  flex-direction: column; /* Stacks currency above the amount */
+  align-items: center; /* Centers text horizontally */
+  padding: 8px 12px; /* Increased padding for better tap targets on mobile */
+  border: 1px solid var(--border-color); /* Adds a subtle border to each option */
+  border-radius: 6px;
+  background-color: #8080801a; /* Subtle background for options */
+  min-width: 80px; /* Ensures a minimum width for better visual consistency */
+  box-sizing: border-box; /* Includes padding and border in the element's total width and height */
+}
+
+.card-section .pricing .amount-option:hover {
+  background-color: #80808030; /* Adds a hover effect for interactivity */
+  cursor: pointer;
+}
+
+/* Adjustments for currency text within pricing */
+.card-section .pricing .available div .currency {
+  font-size: 10px; /* Slightly larger for better readability */
+  opacity: 0.7; /* Makes currency text a bit more subdued */
+  margin-bottom: 2px; /* Small space between currency and amount */
+}
+
+/* Styles for the main amount number */
+.card-section .pricing .available div .amount {
+  font-size: 20px; /* Adjusted slightly for better fit within the options */
+  color: #fff; /* Ensures amount stands out */
+}
+
+/* Styles for the range denominations (e.g., "$10 - $100") */
+.card-section .pricing .range-denominations .amount-range {
+  display: flex;
+  align-items: baseline; /* Aligns currency with the baseline of the amount */
+  gap: 4px; /* Space between currency, amount, and '-' */
+  justify-content: center; /* Centers the range display */
+  width: 100%;
+  font-size: 24px; /* Maintains large font for the range */
+}
+.card-section .pricing .range-denominations .amount-range .currency {
+  font-size: 16px; /* Adjust currency size for range display */
+  opacity: 0.7;
+}
+
+/* Styling for the brand name */
+.brand-name {
+  font-size: 14px;
+  color: #a0a0a0; /* Muted color */
+  margin-top: 4px;
+  margin-bottom: 12px; /* Space below brand name */
+}
+
+/* Styling for the SKU */
+.product-sku {
+  font-size: 12px;
+  color: #808080; /* Muted color for SKU */
+  margin-top: 12px; /* Space above SKU */
+  margin-bottom: 8px; /* Space below SKU */
+}
+
+/* Styling for the country flag and name */
+.country-info {
+  display: flex;
+  align-items: center;
+  justify-content: center; /* Centers the flag and country name */
+  gap: 8px; /* Space between flag and name */
+  margin-top: 8px;
+  margin-bottom: 16px; /* Space above the "Mint" button */
+}
+
+.country-flag {
+  width: 20px; /* Sets a fixed size for the flag */
+  height: auto;
+  border-radius: 2px; /* Slightly rounded corners for the flag */
+}
+
+.country-name {
+  font-size: 14px;
+  color: #b0b0b0; /* Muted color for country name */
+}
+
+/* --- Mobile-Specific Adjustments (within your existing media query) --- */
+@media screen and (max-width: 640px) {
+  .card-section {
+    flex-direction: column; /* Ensures the card content stacks vertically */
+    text-align: center; /* Centers text within the card section */
+  }
+  .card-section .details {
+    margin-left: 0; /* Removes left margin for full width on mobile */
+    align-items: center; /* Centers items within the details block */
+    text-align: center; /* Ensures text is centered within details */
+  }
+  /* Further refine spacing for mobile if needed */
+  .card-section .pricing {
+    margin-top: 12px;
+    margin-bottom: 12px;
+  }
+  /* If you want the fixed denominations to stack on extra small screens */
+  /*
+  .card-section .pricing .fixed-denominations {
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  */
 }
