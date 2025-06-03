@@ -71,16 +71,14 @@ function addProductsHtml(products: Product[], app: AppState, giftCardsSection: H
   console.log("giftCardsSection", giftCardsSection);
 
   const htmlParts: string[] = [];
-  htmlParts.push(`<h2 class="card-heading">Available gift cards</h2>`);
 
   if (products.length > 0) {
     products.forEach((product: Product) => {
       if (product.status === "ACTIVE") {
-        htmlParts.push(getSingleGiftCardHtml(product as GiftCard));
+        htmlParts.push(getSingleGiftCardHtml(product));
       }
     });
   } else {
-    alert();
     htmlParts.push(`<p class="card-error">There are no gift cards available at the moment.</p>`);
   }
   console.log(htmlParts);
