@@ -82,10 +82,7 @@
 .card-section .pricing .available div .currency div {
   font-size: 8px;
 }
-.card-section .pricing .available div .amount {
-  font-size: 24px;
-  color: #fff;
-}
+
 .redeem-info {
   width: 100%;
 }
@@ -225,10 +222,8 @@
   margin-bottom: 2px; /* Small space between currency and amount */
 }
 
-/* Styles for the main amount number */
 .card-section .pricing .available div .amount {
   font-size: 20px; /* Adjusted slightly for better fit within the options */
-  color: #fff; /* Ensures amount stands out */
 }
 
 /* Styles for the range denominations (e.g., "$10 - $100") */

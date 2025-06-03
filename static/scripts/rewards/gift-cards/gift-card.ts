@@ -106,8 +106,6 @@ export function getSingleGiftCardHtml(product: Product) {
       </div>
       <div class="details">
         <h3>${product.productName}</h3>
-        <p class="brand-name">${product.brand.brandName}</p>
-
         <div class="pricing">
           <div class="available">
             ${product.denominationType === "FIXED"
@@ -138,8 +136,6 @@ export function getSingleGiftCardHtml(product: Product) {
                 `}
           </div>
         </div>
-
-        <div class="product-sku">SKU: ${product.productId}</div>
 
         <button id="mint" class="btn" data-loading="false">
           <div class="action">Mint</div>
