@@ -302,3 +302,209 @@
   }
   */
 }
+
+/* --- New Styles for getSingleGiftCardHtmlDetailed --- */
+
+.product-detailed-card {
+  max-width: 800px; /* Max width for the detailed card */
+  margin: 40px auto; /* Center the card on the page */
+  padding: 20px;
+  background-color: var(--background-color-default);
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  color: #f0f0f0; /* Default text color */
+}
+
+@media (prefers-color-scheme: light) {
+  .product-detailed-card {
+    background-color: #ffffff;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    color: #333;
+  }
+}
+
+.product-detailed-card h2,
+.product-detailed-card h3 {
+  text-align: center;
+  margin-bottom: 15px;
+  color: #e0e0e0;
+}
+@media (prefers-color-scheme: light) {
+  .product-detailed-card h2,
+  .product-detailed-card h3 {
+    color: #222;
+  }
+}
+
+.product-header {
+  display: flex;
+  flex-direction: column; /* Stack image and text initially */
+  align-items: center;
+  text-align: center;
+  margin-bottom: 25px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.detailed-card-image {
+  max-width: 250px; /* Larger image for detailed view */
+  height: auto;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  margin-bottom: 15px;
+}
+@media (prefers-color-scheme: light) {
+  .detailed-card-image {
+    border-color: var(--light-mode-border-color);
+  }
+}
+
+.header-text {
+  flex-grow: 1; /* Allows text to take available space */
+}
+
+/* These sections use .card-section but have specific h3 styles */
+.pricing-details-section h3,
+.product-general-info h3,
+.redeem-instructions-section h3 {
+  padding-bottom: 10px;
+  margin-bottom: 20px;
+  border-bottom: 1px dashed #444; /* Subtle separator */
+}
+@media (prefers-color-scheme: light) {
+  .pricing-details-section h3,
+  .product-general-info h3,
+  .redeem-instructions-section h3 {
+    border-bottom: 1px dashed #ddd;
+  }
+}
+
+.sender-pricing-info {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px dashed #444;
+}
+@media (prefers-color-scheme: light) {
+  .sender-pricing-info {
+    border-top: 1px dashed #ddd;
+  }
+}
+.sender-pricing-info h4 {
+  text-align: center;
+  margin-bottom: 15px;
+  color: #c0c0c0;
+}
+@media (prefers-color-scheme: light) {
+  .sender-pricing-info h4 {
+    color: #444;
+  }
+}
+
+.sender-pricing-info p {
+  text-align: center;
+  margin: 5px 0;
+}
+
+.sender-denominations .amount-option {
+  background-color: #4a4a4a4a; /* Slightly different background for sender denoms */
+}
+@media (prefers-color-scheme: light) {
+  .sender-denominations .amount-option {
+    background-color: #e9e9e9;
+  }
+}
+
+.discount-info {
+  margin-top: 15px;
+  font-weight: bold;
+  color: #00bfff; /* Highlight discount */
+}
+
+.product-general-info .info-grid {
+  display: grid;
+  grid-template-columns: 1fr; /* Default to single column */
+  gap: 15px 20px;
+  text-align: left;
+}
+
+.product-general-info .info-item {
+  display: flex;
+  flex-direction: column; /* Stack label and value */
+  align-items: flex-start;
+}
+.product-general-info .info-item strong {
+  color: #bbb;
+  margin-bottom: 4px;
+  font-size: 1.05em;
+}
+.product-general-info .info-item span {
+  color: #f0f0f0;
+  font-size: 0.95em;
+}
+@media (prefers-color-scheme: light) {
+  .product-general-info .info-item strong {
+    color: #555;
+  }
+  .product-general-info .info-item span {
+    color: #333;
+  }
+}
+
+/* Specific styling for the country display within info grid */
+.country-display .country-info {
+  justify-content: flex-start; /* Align flag/name to start */
+}
+
+.redeem-instructions-section {
+  text-align: center; /* Center the fieldsets */
+}
+
+.verbose-instructions-fieldset {
+  margin-top: 20px;
+}
+
+.verbose-content {
+  max-height: 200px; /* Limit height for verbose instructions */
+  overflow-y: auto; /* Add scrollbar if content overflows */
+  text-align: left;
+  padding-right: 10px; /* Space for scrollbar */
+}
+
+.toggle-verbose-btn {
+  margin-top: 15px;
+  padding: 10px 20px;
+  background-color: #007bff; /* Example button color */
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.toggle-verbose-btn:hover {
+  background-color: #0056b3;
+}
+
+/* Utility class for toggling visibility */
+.hidden {
+  display: none !important;
+}
+
+/* Media Queries for Responsiveness */
+@media screen and (min-width: 641px) {
+  .product-header {
+    flex-direction: row; /* Side-by-side on larger screens */
+    text-align: left;
+    gap: 30px;
+  }
+  .detailed-card-image {
+    margin-bottom: 0; /* Remove bottom margin when next to text */
+  }
+  .header-text {
+    align-self: center; /* Vertically align text */
+  }
+  .product-general-info .info-grid {
+    grid-template-columns: 1fr 1fr; /* Two columns on larger screens */
+    text-align: left; /* Align text within grid items */
+  }
+}
