@@ -19,3 +19,7 @@ function gridLoadedCallback() {
 }
 
 initClaimGiftCard(app).catch(console.error);
+
+window.addEventListener("hashchange", () => {
+  initClaimGiftCard(app).catch(console.error);
+});
