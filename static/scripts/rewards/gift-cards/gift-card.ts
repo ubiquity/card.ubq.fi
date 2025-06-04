@@ -76,6 +76,7 @@ function getFixedPricesHtml(giftCard: GiftCard, rewardAmount: BigNumberish) {
       </div>`;
     }
   });
+
   return `${_html}${matchingCardHtml}${otherCardsHtml}`;
 }
 
@@ -140,5 +141,203 @@ export function getSingleGiftCardHtml(product: Product) {
         </div>
       </div>
     </a>
+  `;
+}
+
+// Utility function for currency formatting (this was already present and remains unchanged)
+function formatCurrency(amount: number | null | undefined, currencyCode: string): string {
+  if (amount === null || amount === undefined) {
+    return "N/A";
+  }
+  try {
+    return new Intl.NumberFormat(navigator.language, {
+      style: "currency",
+      currency: currencyCode,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }).format(amount);
+  } catch (error) {
+    console.error("Error formatting currency:", error);
+    return `${amount} ${currencyCode}`;
+  }
+}
+
+// --- NEW HELPER FUNCTIONS (required for getSingleGiftCardHtmlDetailed to work) ---
+
+/**
+ * Renders the recipient denominations block (fixed or range).
+ */
+function renderRecipientDenominations(product: Product): string {
+  if (product.denominationType === "FIXED") {
+    return html`
+      <div class="fixed-denominations">
+        ${product.fixedRecipientDenominations
+          .map(
+            (amount) => html`
+              <div class="amount-option">
+                <span class="currency">${product.recipientCurrencyCode}</span>
+                <span class="amount">${formatCurrency(amount, product.recipientCurrencyCode)}</span>
+              </div>
+            `
+          )
+          .join("")}
+      </div>
+    `;
+  } else {
+    // denominationType === "RANGE"
+    return html`
+      <div class="range-denominations">
+        <div class="amount-range">
+          <span class="currency">${product.recipientCurrencyCode}</span>
+          <span class="amount">${formatCurrency(product.minRecipientDenomination, product.recipientCurrencyCode)}</span>
+          -
+          <span class="currency">${product.recipientCurrencyCode}</span>
+          <span class="amount">${formatCurrency(product.maxRecipientDenomination, product.recipientCurrencyCode)}</span>
+        </div>
+      </div>
+    `;
+  }
+}
+
+/**
+ * Renders the sender denominations block (fixed or range).
+ * This specifically addresses the nested ternary issue.
+ */
+function renderSenderDenominations(product: Product): string {
+  let denominationsHtml = "";
+
+  if (product.denominationType === "FIXED" && product.fixedSenderDenominations.length > 0) {
+    denominationsHtml = html`
+      <div class="fixed-denominations sender-denominations">
+        ${product.fixedSenderDenominations
+          .map(
+            (amount) => html`
+              <div class="amount-option">
+                <span class="currency">${product.senderCurrencyCode}</span>
+                <span class="amount">${formatCurrency(amount, product.senderCurrencyCode)}</span>
+              </div>
+            `
+          )
+          .join("")}
+      </div>
+    `;
+  } else if (product.denominationType === "RANGE" && product.minSenderDenomination !== null && product.maxSenderDenomination !== null) {
+    denominationsHtml = html`
+      <div class="range-denominations sender-denominations">
+        <div class="amount-range">
+          <span class="currency">${product.senderCurrencyCode}</span>
+          <span class="amount">${formatCurrency(product.minSenderDenomination, product.senderCurrencyCode)}</span>
+          -
+          <span class="currency">${product.senderCurrencyCode}</span>
+          <span class="amount">${formatCurrency(product.maxSenderDenomination, product.senderCurrencyCode)}</span>
+        </div>
+      </div>
+    `;
+  }
+  return denominationsHtml;
+}
+
+/**
+ * Renders the entire sender pricing section, including fees and denominations.
+ */
+function renderSenderPricingSection(product: Product): string {
+  const hasSenderPricingInfo = product.senderFee > 0 || product.senderFeePercentage > 0 || product.senderCurrencyCode !== product.recipientCurrencyCode;
+
+  if (!hasSenderPricingInfo) {
+    return "";
+  }
+
+  const senderDenominationsContent = renderSenderDenominations(product);
+  const senderFeeHtml =
+    product.senderFee > 0
+      ? html`<p><strong>Sender Fee:</strong> ${formatCurrency(product.senderFee, product.senderCurrencyCode || product.recipientCurrencyCode)}</p>`
+      : "";
+  const senderFeePercentageHtml = product.senderFeePercentage > 0 ? html`<p><strong>Sender Fee Percentage:</strong> ${product.senderFeePercentage}%</p>` : "";
+
+  return html`
+    <div class="sender-pricing-info">
+      <h4>Sender Side Details</h4>
+      <p><strong>Sender Currency:</strong> ${product.senderCurrencyCode}</p>
+      ${senderDenominationsContent} ${senderFeeHtml} ${senderFeePercentageHtml}
+    </div>
+  `;
+}
+
+/**
+ * Renders the verbose redeem instructions block if available.
+ */
+function renderVerboseInstructions(product: Product): string {
+  if (!product.redeemInstruction.verbose) {
+    return "";
+  }
+
+  return html`
+    <fieldset class="redeem-info verbose-instructions-fieldset">
+      <legend>Verbose Instructions</legend>
+      <div id="verbose-instructions-${product.productId}" class="instructions verbose-content hidden"> ${product.redeemInstruction.verbose} </div>
+      <button class="btn toggle-verbose-btn" data-target-id="verbose-instructions-${product.productId}"> Show Full Instructions </button>
+    </fieldset>
+  `;
+}
+
+// --- The Refactored getSingleGiftCardHtmlDetailed Function ---
+
+export function getSingleGiftCardHtmlDetailed(product: Product) {
+  const imageUrl = product.logoUrls.length > 0 ? product.logoUrls[0] : "https://via.placeholder.com/250x150?text=No+Image";
+  const imageAltText = product.productName ? `${product.productName} logo` : "Gift card logo";
+
+  // Pre-calculate content using helper functions
+  const recipientDenominationsContent = renderRecipientDenominations(product);
+  const senderPricingContent = renderSenderPricingSection(product);
+  const discountInfoContent =
+    product.discountPercentage > 0 ? html`<p class="discount-info"><strong>Discount:</strong> ${product.discountPercentage}%</p>` : "";
+  const verboseInstructionsContent = renderVerboseInstructions(product);
+
+  return html`
+    <div class="product-detailed-card" data-product-id="${product.productId}">
+      <div class="product-header">
+        <img src="${imageUrl}" alt="${imageAltText}" class="detailed-card-image" />
+        <div class="header-text">
+          <h2>${product.productName}</h2>
+          <p class="brand-name">${product.brand.brandName}</p>
+          <p class="product-sku">Product ID: ${product.productId}</p>
+        </div>
+      </div>
+
+      <div class="pricing-details-section card-section">
+        <h3>Denominations Available</h3>
+        <div class="pricing">
+          <div class="available"> ${recipientDenominationsContent} </div>
+        </div>
+        ${senderPricingContent} ${discountInfoContent}
+      </div>
+
+      <div class="product-general-info card-section">
+        <h3>General Information</h3>
+        <div class="info-grid">
+          <div class="info-item"><strong>Status:</strong> <span>${product.status}</span></div>
+          <div class="info-item"><strong>Global:</strong> <span>${product.global ? "Yes" : "No"}</span></div>
+          <div class="info-item"><strong>Supports Pre-Order:</strong> <span>${product.supportsPreOrder ? "Yes" : "No"}</span></div>
+          <div class="info-item"><strong>User ID Required:</strong> <span>${product.additionalRequirements.userIdRequired ? "Yes" : "No"}</span></div>
+          <div class="info-item"><strong>Category:</strong> <span>${product.category.name}</span></div>
+          <div class="info-item country-display">
+            <strong>Country:</strong>
+            <span class="country-info">
+              <img src="${product.country.flagUrl}" alt="${product.country.name} flag" class="country-flag" />
+              <span class="country-name">${product.country.name}</span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="redeem-instructions-section card-section">
+        <h3>Redeem Instructions</h3>
+        <fieldset class="redeem-info">
+          <legend>Concise Instructions</legend>
+          <div class="instructions">${product.redeemInstruction.concise}</div>
+        </fieldset>
+        ${verboseInstructionsContent}
+      </div>
+    </div>
   `;
 }
