@@ -1,7 +1,7 @@
 import { getGiftCardOrderId } from "../../../../shared/helpers";
 import { GiftCard, OrderTransaction, Product } from "../../../../shared/types";
 import { AppState } from "../app-state";
-import { getGiftCardHtml, getSingleGiftCardHtml } from "./gift-card";
+import { getGiftCardHtml, getSingleGiftCardHtml, getSingleGiftCardHtmlDetailed } from "./gift-card";
 import { detectCardsEnv, getApiBaseUrl, getUserCountryCode } from "./helpers";
 import { getRedeemCodeHtml } from "./reveal/redeem-code-html";
 import { attachRevealAction } from "./reveal/reveal-action";
@@ -36,7 +36,7 @@ export async function initClaimGiftCard(app: AppState) {
     if (productResponse.status == 200) {
       const product = (await productResponse.json()) as Product;
       console.log("product", product);
-      giftCardsSection.innerHTML = JSON.stringify(product, null, 2);
+      giftCardsSection.innerHTML = getSingleGiftCardHtmlDetailed(product);
     } else {
       giftCardsSection.innerHTML = "<p class='card-error'>There was a problem in fetching gift cards. Please try again later.</p>";
     }
