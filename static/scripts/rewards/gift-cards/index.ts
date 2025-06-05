@@ -6,6 +6,8 @@ import { detectCardsEnv, getApiBaseUrl, getUserCountryCode } from "./helpers";
 import { getRedeemCodeHtml } from "./reveal/redeem-code-html";
 import { attachRevealAction } from "./reveal/reveal-action";
 
+let loadedProducts: Product[] = [];
+
 export async function initClaimGiftCard(app: AppState) {
   const giftCardsSection = document.getElementById("gift-cards");
   if (!giftCardsSection) {
@@ -23,26 +25,6 @@ export async function initClaimGiftCard(app: AppState) {
     return;
   }
 
-  const productSku: string = window.location.hash.replace("#/", "");
-  if (productSku) {
-    const retrieveProductUrl = `${getApiBaseUrl()}/gift-card?sku=${productSku}&countryCode=${countryCode}`;
-    const productResponse = await fetch(retrieveProductUrl, {
-      method: "GET",
-      headers: {
-        Accept: "application/json",
-      },
-    });
-
-    if (productResponse.status == 200) {
-      const product = (await productResponse.json()) as Product;
-      console.log("product", product);
-      giftCardsSection.innerHTML = getSingleGiftCardHtmlDetailed(product);
-    } else {
-      giftCardsSection.innerHTML = "<p class='card-error'>There was a problem in fetching gift cards. Please try again later.</p>";
-    }
-    return;
-  }
-
   const requestInit = {
     method: "GET",
     headers: {
@@ -56,9 +38,22 @@ export async function initClaimGiftCard(app: AppState) {
   if (productsResponse.status == 200) {
     const products = (await productsResponse.json()).products as Product[];
     console.log("products", products);
-
-    addProductsHtml(products, app, giftCardsSection);
+    loadedProducts = products;
   }
+
+  const productSku = Number(window.location.hash.replace("#/", ""));
+  if (productSku) {
+    const product = loadedProducts.find((p) => p.productId === productSku);
+    if (product) {
+      console.log("product", product);
+      giftCardsSection.innerHTML = getSingleGiftCardHtmlDetailed(product);
+    } else {
+      giftCardsSection.innerHTML = "<p class='card-error'>Unable to find a gift card.</p>";
+    }
+    return;
+  }
+
+  addProductsHtml(loadedProducts, app, giftCardsSection);
 
   const retrieveOrderUrl = `${getApiBaseUrl()}/get-order?orderId=${getGiftCardOrderId(app.reward.beneficiary, app.reward.signature)}`;
 
