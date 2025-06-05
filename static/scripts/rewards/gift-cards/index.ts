@@ -8,6 +8,13 @@ import { attachRevealAction } from "./reveal/reveal-action";
 
 let loadedProducts: Product[] = [];
 
+const requestInit = {
+  method: "GET",
+  headers: {
+    Accept: "application/json",
+  },
+};
+
 export async function initClaimGiftCard(app: AppState) {
   const giftCardsSection = document.getElementById("gift-cards");
   if (!giftCardsSection) {
@@ -16,29 +23,16 @@ export async function initClaimGiftCard(app: AppState) {
   }
   giftCardsSection.innerHTML = "Loading...";
 
-  void detectCardsEnv();
+  if (loadedProducts.length === 0) {
+    void detectCardsEnv();
 
-  const countryCode = await getUserCountryCode();
+    const countryCode = await getUserCountryCode();
 
-  if (!countryCode) {
-    giftCardsSection.innerHTML = `<p class="card-error">Failed to load suitable virtual cards for you. Refresh or try disabling adblocker.</p>`;
-    return;
-  }
-
-  const requestInit = {
-    method: "GET",
-    headers: {
-      Accept: "application/json",
-    },
-  };
-
-  const retrieveProductsUrl = `${getApiBaseUrl()}/bootstrap?page=1`;
-  const productsResponse = await fetch(retrieveProductsUrl, requestInit);
-
-  if (productsResponse.status == 200) {
-    const products = (await productsResponse.json()).products as Product[];
-    console.log("products", products);
-    loadedProducts = products;
+    if (!countryCode) {
+      giftCardsSection.innerHTML = `<p class="card-error">Failed to load suitable virtual cards for you. Refresh or try disabling adblocker.</p>`;
+      return;
+    }
+    loadedProducts = await loadProducts();
   }
 
   const productSku = Number(window.location.hash.replace("#/", ""));
@@ -98,4 +92,14 @@ function addProductsHtml(products: Product[], app: AppState, giftCardsSection: H
   }
   console.log(htmlParts);
   giftCardsSection.innerHTML = htmlParts.join("");
+}
+
+export async function loadProducts() {
+  const retrieveProductsUrl = `${getApiBaseUrl()}/bootstrap?page=1`;
+  const productsResponse = await fetch(retrieveProductsUrl, requestInit);
+
+  if (productsResponse.status == 200) {
+    return (await productsResponse.json()).products as Product[];
+  }
+  return [];
 }
