@@ -263,23 +263,6 @@ function renderSenderPricingSection(product: Product): string {
   `;
 }
 
-/**
- * Renders the verbose redeem instructions block if available.
- */
-function renderVerboseInstructions(product: Product): string {
-  if (!product.redeemInstruction.verbose) {
-    return "";
-  }
-
-  return html`
-    <fieldset class="redeem-info verbose-instructions-fieldset">
-      <legend>Verbose Instructions</legend>
-      <div id="verbose-instructions-${product.productId}" class="instructions verbose-content hidden"> ${product.redeemInstruction.verbose} </div>
-      <button class="btn toggle-verbose-btn" data-target-id="verbose-instructions-${product.productId}"> Show Full Instructions </button>
-    </fieldset>
-  `;
-}
-
 // --- The Refactored getSingleGiftCardHtmlDetailed Function ---
 
 export function getSingleGiftCardHtmlDetailed(product: Product) {
@@ -291,7 +274,6 @@ export function getSingleGiftCardHtmlDetailed(product: Product) {
   const senderPricingContent = renderSenderPricingSection(product);
   const discountInfoContent =
     product.discountPercentage > 0 ? html`<p class="discount-info"><strong>Discount:</strong> ${product.discountPercentage}%</p>` : "";
-  const verboseInstructionsContent = renderVerboseInstructions(product);
 
   return html`
     <div class="product-detailed-card" data-product-id="${product.productId}">
@@ -312,31 +294,10 @@ export function getSingleGiftCardHtmlDetailed(product: Product) {
         ${senderPricingContent} ${discountInfoContent}
       </div>
 
-      <div class="product-general-info card-section">
-        <h3>General Information</h3>
-        <div class="info-grid">
-          <div class="info-item"><strong>Status:</strong> <span>${product.status}</span></div>
-          <div class="info-item"><strong>Global:</strong> <span>${product.global ? "Yes" : "No"}</span></div>
-          <div class="info-item"><strong>Supports Pre-Order:</strong> <span>${product.supportsPreOrder ? "Yes" : "No"}</span></div>
-          <div class="info-item"><strong>User ID Required:</strong> <span>${product.additionalRequirements.userIdRequired ? "Yes" : "No"}</span></div>
-          <div class="info-item"><strong>Category:</strong> <span>${product.category.name}</span></div>
-          <div class="info-item country-display">
-            <strong>Country:</strong>
-            <span class="country-info">
-              <img src="${product.country.flagUrl}" alt="${product.country.name} flag" class="country-flag" />
-              <span class="country-name">${product.country.name}</span>
-            </span>
-          </div>
-        </div>
-      </div>
-
       <div class="redeem-instructions-section card-section">
         <h3>Redeem Instructions</h3>
-        <fieldset class="redeem-info">
-          <legend>Concise Instructions</legend>
-          <div class="instructions">${product.redeemInstruction.concise}</div>
-        </fieldset>
-        ${verboseInstructionsContent}
+        <div class="instructions">${product.redeemInstruction.concise}</div>
+        <div class="instructions">${product.redeemInstruction.verbose}</div>
       </div>
     </div>
   `;
