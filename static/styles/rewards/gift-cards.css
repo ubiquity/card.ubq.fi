@@ -456,14 +456,6 @@
   justify-content: flex-start; /* Align flag/name to start */
 }
 
-.redeem-instructions-section {
-  text-align: center; /* Center the fieldsets */
-}
-
-.verbose-instructions-fieldset {
-  margin-top: 20px;
-}
-
 .verbose-content {
   max-height: 200px; /* Limit height for verbose instructions */
   overflow-y: auto; /* Add scrollbar if content overflows */
