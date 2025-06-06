@@ -199,70 +199,6 @@ function renderRecipientDenominations(product: Product): string {
   }
 }
 
-/**
- * Renders the sender denominations block (fixed or range).
- * This specifically addresses the nested ternary issue.
- */
-function renderSenderDenominations(product: Product): string {
-  let denominationsHtml = "";
-
-  if (product.denominationType === "FIXED" && product.fixedSenderDenominations.length > 0) {
-    denominationsHtml = html`
-      <div class="fixed-denominations sender-denominations">
-        ${product.fixedSenderDenominations
-          .map(
-            (amount) => html`
-              <div class="amount-option">
-                <span class="currency">${product.senderCurrencyCode}</span>
-                <span class="amount">${formatCurrency(amount, product.senderCurrencyCode)}</span>
-              </div>
-            `
-          )
-          .join("")}
-      </div>
-    `;
-  } else if (product.denominationType === "RANGE" && product.minSenderDenomination !== null && product.maxSenderDenomination !== null) {
-    denominationsHtml = html`
-      <div class="range-denominations sender-denominations">
-        <div class="amount-range">
-          <span class="currency">${product.senderCurrencyCode}</span>
-          <span class="amount">${formatCurrency(product.minSenderDenomination, product.senderCurrencyCode)}</span>
-          -
-          <span class="currency">${product.senderCurrencyCode}</span>
-          <span class="amount">${formatCurrency(product.maxSenderDenomination, product.senderCurrencyCode)}</span>
-        </div>
-      </div>
-    `;
-  }
-  return denominationsHtml;
-}
-
-/**
- * Renders the entire sender pricing section, including fees and denominations.
- */
-function renderSenderPricingSection(product: Product): string {
-  const hasSenderPricingInfo = product.senderFee > 0 || product.senderFeePercentage > 0 || product.senderCurrencyCode !== product.recipientCurrencyCode;
-
-  if (!hasSenderPricingInfo) {
-    return "";
-  }
-
-  const senderDenominationsContent = renderSenderDenominations(product);
-  const senderFeeHtml =
-    product.senderFee > 0
-      ? html`<p><strong>Sender Fee:</strong> ${formatCurrency(product.senderFee, product.senderCurrencyCode || product.recipientCurrencyCode)}</p>`
-      : "";
-  const senderFeePercentageHtml = product.senderFeePercentage > 0 ? html`<p><strong>Sender Fee Percentage:</strong> ${product.senderFeePercentage}%</p>` : "";
-
-  return html`
-    <div class="sender-pricing-info">
-      <h4>Sender Side Details</h4>
-      <p><strong>Sender Currency:</strong> ${product.senderCurrencyCode}</p>
-      ${senderDenominationsContent} ${senderFeeHtml} ${senderFeePercentageHtml}
-    </div>
-  `;
-}
-
 // --- The Refactored getSingleGiftCardHtmlDetailed Function ---
 
 export function getSingleGiftCardHtmlDetailed(product: Product) {
@@ -271,9 +207,6 @@ export function getSingleGiftCardHtmlDetailed(product: Product) {
 
   // Pre-calculate content using helper functions
   const recipientDenominationsContent = renderRecipientDenominations(product);
-  const senderPricingContent = renderSenderPricingSection(product);
-  const discountInfoContent =
-    product.discountPercentage > 0 ? html`<p class="discount-info"><strong>Discount:</strong> ${product.discountPercentage}%</p>` : "";
 
   return html`
     <div class="product-detailed-card" data-product-id="${product.productId}">
@@ -281,17 +214,14 @@ export function getSingleGiftCardHtmlDetailed(product: Product) {
         <img src="${imageUrl}" alt="${imageAltText}" class="detailed-card-image" />
         <div class="header-text">
           <h2>${product.productName}</h2>
-          <p class="brand-name">${product.brand.brandName}</p>
-          <p class="product-sku">Product ID: ${product.productId}</p>
+          <p class="product-sku">SKU: ${product.productId}</p>
+          <div class="pricing-details-section card-section">
+            <h3></h3>
+            <div class="pricing">
+              <div class="available"> ${recipientDenominationsContent} </div>
+            </div>
+          </div>
         </div>
-      </div>
-
-      <div class="pricing-details-section card-section">
-        <h3>Denominations Available</h3>
-        <div class="pricing">
-          <div class="available"> ${recipientDenominationsContent} </div>
-        </div>
-        ${senderPricingContent} ${discountInfoContent}
       </div>
 
       <div class="redeem-instructions-section card-section">

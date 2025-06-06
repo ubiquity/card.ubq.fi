@@ -254,6 +254,7 @@
   color: #808080; /* Muted color for SKU */
   margin-top: 12px; /* Space above SKU */
   margin-bottom: 8px; /* Space below SKU */
+  text-align: center;
 }
 
 /* Styling for the country flag and name */
