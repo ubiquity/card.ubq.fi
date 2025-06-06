@@ -221,6 +221,7 @@ export function getSingleGiftCardHtmlDetailed(product: Product) {
               <div class="available"> ${recipientDenominationsContent} </div>
             </div>
             <h3>Amount: <input type="number" id="amount" /></h3>
+            <button type="button" id="mint-btn">Mint</button>
           </div>
         </div>
       </div>
@@ -232,4 +233,25 @@ export function getSingleGiftCardHtmlDetailed(product: Product) {
       </div>
     </div>
   `;
+}
+
+export async function addGiftCardEvents() {
+  document.getElementById("mint-btn")?.addEventListener("click", async (event) => {
+    const button = event.currentTarget as HTMLButtonElement;
+    if (button.dataset.loading === "true") return; // Prevent double clicks
+    button.dataset.loading = "true";
+    button.innerText = "Minting...";
+
+    try {
+      // Call the mint function here, assuming it exists in the global scope
+      //await mint();
+      alert("Mint");
+    } catch (error) {
+      console.error("Error during minting:", error);
+      alert("An error occurred while minting the gift card. Please try again.");
+    } finally {
+      button.dataset.loading = "false";
+      button.classList.remove("loading");
+    }
+  });
 }
