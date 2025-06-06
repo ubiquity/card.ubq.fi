@@ -1,8 +1,12 @@
-import { BigNumberish } from "ethers";
-import { GiftCard, Product } from "../../../../shared/types";
-import { getFixedPriceToValueMap, getGiftCardValue, isRangePriceGiftCardClaimable } from "../../../../shared/pricing";
+import { BigNumberish, ethers } from "ethers";
 import { formatEther } from "ethers/lib/utils";
+import { giftCardTreasuryAddress, ubiquityDollarChainAddresses } from "../../../../shared/constants";
+import { getFixedPriceToValueMap, getGiftCardValue, getTotalPriceOfValue, isRangePriceGiftCardClaimable } from "../../../../shared/pricing";
+import { GiftCard, Product } from "../../../../shared/types";
+import { postOrder } from "../../shared/api";
+import { toaster } from "../toaster";
 import { getGiftCardActivateInfoHtml } from "./activate/activate-html";
+import { getUserCountryCode } from "./helpers";
 
 const html = String.raw;
 
@@ -216,11 +220,11 @@ export function getSingleGiftCardHtmlDetailed(product: Product) {
           <h2>${product.productName}</h2>
           <p class="product-sku">SKU: ${product.productId}</p>
           <div class="pricing-details-section card-section">
-            <h3></h3>
             <div class="pricing">
               <div class="available"> ${recipientDenominationsContent} </div>
             </div>
-            <h3>Amount: <input type="number" id="amount" /></h3>
+            <h3>Amount: <input type="number" id="value" /></h3>
+            <h3 id="price"></h3>
             <button type="button" id="mint-btn">Mint</button>
           </div>
         </div>
@@ -235,7 +239,7 @@ export function getSingleGiftCardHtmlDetailed(product: Product) {
   `;
 }
 
-export async function addGiftCardEvents() {
+export async function addGiftCardEvents(giftCard: GiftCard) {
   document.getElementById("mint-btn")?.addEventListener("click", async (event) => {
     const button = event.currentTarget as HTMLButtonElement;
     if (button.dataset.loading === "true") return; // Prevent double clicks
@@ -243,9 +247,7 @@ export async function addGiftCardEvents() {
     button.innerText = "Minting...";
 
     try {
-      // Call the mint function here, assuming it exists in the global scope
-      //await mint();
-      alert("Mint");
+      await mint(giftCard);
     } catch (error) {
       console.error("Error during minting:", error);
       alert("An error occurred while minting the gift card. Please try again.");
@@ -254,4 +256,81 @@ export async function addGiftCardEvents() {
       button.classList.remove("loading");
     }
   });
+
+  document.getElementById("value")?.addEventListener("input", async () => {
+    const priceElement = document.getElementById("price") as HTMLElement;
+    const value = Number((document.getElementById("value") as HTMLInputElement).value);
+    if (!value) {
+      priceElement.innerText = "";
+      return;
+    }
+    const price = getTotalPriceOfValue(Number(value), giftCard);
+    if (price) {
+      priceElement.innerText = `Price: ${formatCurrency(price, giftCard.senderCurrencyCode)}`;
+    }
+  });
+}
+export async function mint(giftCard: GiftCard) {
+  const value = (document.getElementById("value") as HTMLInputElement).value;
+  const price = getTotalPriceOfValue(Number(value), giftCard);
+  console.log(`Minting gift card with amount: ${value}, price: ${price} for product ID: ${giftCard.productId}`);
+
+  if (typeof window.ethereum === "undefined") {
+    throw new Error("MetaMask is not installed. Please install it to proceed.");
+  }
+
+  try {
+    await window.ethereum.request({ method: "eth_requestAccounts" });
+    // ethers.js v5 way to get provider and signer from window.ethereum
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    const signer = provider.getSigner();
+
+    const network = await provider.getNetwork();
+    const chainId = Number(network.chainId); // Ensure chainId is a number
+
+    console.log(`Connected to chainId: ${chainId}`);
+
+    const ubiquityDollarAddress = ubiquityDollarChainAddresses[chainId];
+    if (!ubiquityDollarAddress) {
+      throw new Error(`Ubiquity Dollar contract address not found for chainId: ${chainId}`);
+    }
+    console.log(`Ubiquity Dollar contract address: ${ubiquityDollarAddress}`);
+
+    const ubiquityDollarAbi = [
+      // ERC-20 standard functions, at least 'transfer'
+      "function transfer(address recipient, uint256 amount) returns (bool)",
+      "function decimals() view returns (uint8)",
+    ];
+
+    const ubiquityDollarContract = new ethers.Contract(ubiquityDollarAddress, ubiquityDollarAbi, signer);
+
+    // Get the number of decimals for uAD
+    const decimals = await ubiquityDollarContract.decimals();
+    // ethers.js v5 uses BigNumber for amounts. parseUnits returns a BigNumber.
+    const amountToTransfer = ethers.utils.parseUnits(price.toString(), decimals);
+
+    console.log(`Attempting to transfer ${ethers.utils.formatUnits(amountToTransfer, decimals)} uAD to ${giftCardTreasuryAddress}`);
+
+    const tx = await ubiquityDollarContract.transfer(giftCardTreasuryAddress, amountToTransfer);
+    await tx.wait(); // Wait for the transaction to be mined
+
+    console.log("Transaction successful:", tx.hash);
+
+    const order = await postOrder({
+      type: "ubiquity-dollar",
+      chainId: provider.network.chainId,
+      txHash: tx.hash,
+      productId: giftCard.productId,
+      country: await getUserCountryCode(),
+    });
+    if (!order) {
+      toaster.create("error", "Order failed. Try again later.");
+      return;
+    }
+
+    toaster.create("success", `Success. Your gift card will be available for redeem in your cards in a few minutes.`);
+  } catch (error) {
+    console.error("Error minting gift card:", error);
+    throw error; // Re-throw the error for further handling
+  }
 }
