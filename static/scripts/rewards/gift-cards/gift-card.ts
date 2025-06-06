@@ -220,6 +220,7 @@ export function getSingleGiftCardHtmlDetailed(product: Product) {
             <div class="pricing">
               <div class="available"> ${recipientDenominationsContent} </div>
             </div>
+            <h3>Amount: <input type="number" id="amount" /></h3>
           </div>
         </div>
       </div>
