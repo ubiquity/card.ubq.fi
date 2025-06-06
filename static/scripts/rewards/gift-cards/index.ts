@@ -1,7 +1,7 @@
 import { getGiftCardOrderId } from "../../../../shared/helpers";
 import { GiftCard, OrderTransaction, Product } from "../../../../shared/types";
 import { AppState } from "../app-state";
-import { getGiftCardHtml, getSingleGiftCardHtml, getSingleGiftCardHtmlDetailed } from "./gift-card";
+import { addGiftCardEvents, getGiftCardHtml, getSingleGiftCardHtml, getSingleGiftCardHtmlDetailed } from "./gift-card";
 import { detectCardsEnv, getApiBaseUrl, getUserCountryCode } from "./helpers";
 import { getRedeemCodeHtml } from "./reveal/redeem-code-html";
 import { attachRevealAction } from "./reveal/reveal-action";
@@ -41,6 +41,7 @@ export async function initClaimGiftCard(app: AppState) {
     if (product) {
       console.log("product", product);
       giftCardsSection.innerHTML = getSingleGiftCardHtmlDetailed(product);
+      await addGiftCardEvents();
     } else {
       giftCardsSection.innerHTML = "<p class='card-error'>Unable to find a gift card.</p>";
     }
