@@ -233,7 +233,10 @@ export function getSingleGiftCardHtmlDetailed(product: Product) {
       <div class="redeem-instructions-section card-section">
         <h3>Redeem Instructions</h3>
         <div class="instructions">${product.redeemInstruction.concise}</div>
-        <div class="instructions">${product.redeemInstruction.verbose}</div>
+        ${product.redeemInstruction.concise !== product.redeemInstruction.verbose
+          ? `<div class="instructions">${product.redeemInstruction.concise !== product.redeemInstruction.verbose}</div>
+      `
+          : ""}
       </div>
     </div>
   `;
