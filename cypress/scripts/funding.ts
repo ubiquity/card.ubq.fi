@@ -18,10 +18,10 @@ class TestFunder {
   beneficiary = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
   permit2 = "0x000000000022D473030F116dDEE9F6B43aC78BA3";
   rewardToken = ubiquityDollarChainAddresses[100];
-  whale = "0xefC0e701A824943b469a694aC564Aa1efF7Ab7dd";
+  whale = "0x9051eDa96dB419c967189F4Ac303a290F3327680";
   expected = {
-    allowance: "999999999999999111119999999999999999",
-    balance: "10000000000000000000000",
+    allowance: "1000000000000000000000",
+    balance: "1000000000000000000000",
   };
 
   async execute() {
@@ -86,6 +86,7 @@ class TestFunder {
     }
 
     if (parseInt(balance) < parseInt(this.expected.balance)) {
+      console.error(`Balance is ${balance}, expected ${this.expected.balance}`);
       throw new Error("Balance is not set correctly");
     }
 
@@ -136,6 +137,19 @@ class TestFunder {
   }
 
   private async _approvePayload(address: string) {
+    console.log(
+      "this.anvilRPC",
+      "send",
+      "--rpc-url",
+      this.anvilRPC,
+      this.rewardToken,
+      "--unlocked",
+      "--from",
+      address,
+      "approve(address,uint256)(bool)",
+      this.permit2,
+      this.expected.allowance
+    );
     const approve = await this._exec({
       command: "cast",
       args: [
