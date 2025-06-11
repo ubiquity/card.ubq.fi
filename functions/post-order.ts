@@ -2,6 +2,7 @@ import { Interface, TransactionDescription } from "@ethersproject/abi";
 import { TransactionReceipt, TransactionResponse } from "@ethersproject/providers";
 import { verifyMessage } from "@ethersproject/wallet";
 import { BigNumber } from "ethers";
+import { isGeoRestricted } from "../shared/allowed-country-list";
 import { PostOrderParams, postOrderParamsSchema } from "../shared/api-types";
 import { giftCardTreasuryAddress, permit2Address, ubiquityDollarAllowedChainIds, ubiquityDollarChainAddresses } from "../shared/constants";
 import { getGiftCardOrderId, getMintMessageToSign } from "../shared/helpers";
@@ -11,7 +12,6 @@ import { useRpcHandler } from "../shared/use-rpc-handler";
 import { erc20Abi } from "../static/scripts/rewards/abis/erc20-abi";
 import { permit2Abi } from "../static/scripts/rewards/abis/permit2-abi";
 import { getTransactionFromOrderId } from "./get-order";
-import { findBestCard } from "./utils/best-card-finder";
 import { commonHeaders, getAccessToken, getReloadlyApiBaseUrl } from "./utils/shared";
 import { AccessToken, Context, ReloadlyFailureResponse, ReloadlyOrderResponse } from "./utils/types";
 import { validateEnvVars, validateRequestMethod } from "./utils/validators";
@@ -76,10 +76,8 @@ export async function onRequest(ctx: Context): Promise<Response> {
       const exchangeRateResponse = await getExchangeRate(1, giftCard.recipientCurrencyCode, accessToken);
       exchangeRate = exchangeRateResponse.senderAmount;
     }
-
-    const bestCard = await findBestCard(country, amountDaiWei, accessToken);
-    if (bestCard.productId != productId) {
-      throw new Error(`You are not ordering the suitable card: ${JSON.stringify({ ordered: productId, suitable: bestCard })}`);
+    if (isGeoRestricted(productId, country)) {
+      throw new Error(`Product ID ${productId} is not supported for country ${country}.`);
     }
 
     const giftCardValue = getGiftCardValue(giftCard, amountDaiWei, exchangeRate);
