@@ -24,7 +24,7 @@ export async function onRequest(ctx: Context): Promise<Response> {
 
     const accessToken = await getAccessToken(ctx.env);
 
-    const url = `${getReloadlyApiBaseUrl(accessToken.isSandbox)}/products?includeFixed=false`;
+    const url = `${getReloadlyApiBaseUrl(accessToken.isSandbox)}/products?includeFixed=false&productCategoryId=1`;
     console.log(`Retrieving gift cards from ${url}`);
     const options = {
       method: "GET",
