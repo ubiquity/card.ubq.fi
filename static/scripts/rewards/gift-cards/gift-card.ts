@@ -253,8 +253,8 @@ export async function addGiftCardEvents(giftCard: GiftCard) {
       await mint(giftCard);
     } catch (error) {
       console.error("Error during minting:", error);
-      alert("An error occurred while minting the gift card. Please try again.");
     } finally {
+      button.innerText = "Mint";
       button.dataset.loading = "false";
       button.classList.remove("loading");
     }
