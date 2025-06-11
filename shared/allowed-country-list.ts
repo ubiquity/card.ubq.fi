@@ -1,3 +1,24 @@
+export type CountryListType = {
+  [productId: number]: {
+    blockList: string[]; // 2 letter List of countries that are blocked from minting
+    allowList: string[];
+  };
+};
+
+export const countryList: CountryListType = {};
+
+export function isGeoRestricted(productId: number, countryCode: string): boolean {
+  const product = countryList[productId];
+
+  // If product doesn't exist, it's not geo-restricted (returns false).
+  // Otherwise, it's geo-restricted if it's in the blockList
+  // OR if it has an allowList and the countryCode is NOT in the allowList.
+  return (
+    !!product && // Ensure product exists before accessing its properties
+    ((product.blockList.length > 0 && product.blockList.includes(countryCode)) || (product.allowList.length > 0 && !product.allowList.includes(countryCode)))
+  );
+}
+
 export function isAllowed(countryCode: string): boolean {
   /**
    * There are separate allow list for visa & mastercard
