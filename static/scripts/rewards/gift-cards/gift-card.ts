@@ -229,9 +229,9 @@ export async function getSingleGiftCardHtmlDetailed(product: Product) {
             <div class="pricing">
               <div class="available"> ${recipientDenominationsContent} </div>
             </div>
-            <h3>Amount: <input type="number" id="value" value="${value}" /></h3>
+            <h3>Amount: <input type="number" id="value" value="${value ?? ""}" ${value ? "disabled" : ""} /></h3>
             <h3 id="price"></h3>
-            <button type="button" id="mint-btn">Mint</button>
+            <button type="button" id="mint-btn">${value ? "Retry Mint" : "Mint"}</button>
           </div>
         </div>
       </div>
