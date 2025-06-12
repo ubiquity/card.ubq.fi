@@ -40,8 +40,8 @@ export async function initClaimGiftCard(app: AppState) {
     const product = loadedProducts.find((p) => p.productId === productSku);
     if (product) {
       console.log("product", product);
-      giftCardsSection.innerHTML = getSingleGiftCardHtmlDetailed(product);
-      await addGiftCardEvents();
+      giftCardsSection.innerHTML = await getSingleGiftCardHtmlDetailed(product);
+      await addGiftCardEvents(product as GiftCard);
     } else {
       giftCardsSection.innerHTML = "<p class='card-error'>Unable to find a gift card.</p>";
     }

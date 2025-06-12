@@ -7,6 +7,7 @@ import { postOrder } from "../../shared/api";
 import { toaster } from "../toaster";
 import { getGiftCardActivateInfoHtml } from "./activate/activate-html";
 import { getUserCountryCode } from "./helpers";
+import { getConnectedWallet } from "./utils";
 
 const html = String.raw;
 
@@ -166,8 +167,6 @@ function formatCurrency(amount: number | null | undefined, currencyCode: string)
   }
 }
 
-// --- NEW HELPER FUNCTIONS (required for getSingleGiftCardHtmlDetailed to work) ---
-
 /**
  * Renders the recipient denominations block (fixed or range).
  */
@@ -205,12 +204,19 @@ function renderRecipientDenominations(product: Product): string {
 
 // --- The Refactored getSingleGiftCardHtmlDetailed Function ---
 
-export function getSingleGiftCardHtmlDetailed(product: Product) {
+export async function getSingleGiftCardHtmlDetailed(product: Product) {
   const imageUrl = product.logoUrls.length > 0 ? product.logoUrls[0] : "https://via.placeholder.com/250x150?text=No+Image";
   const imageAltText = product.productName ? `${product.productName} logo` : "Gift card logo";
 
   // Pre-calculate content using helper functions
   const recipientDenominationsContent = renderRecipientDenominations(product);
+  const pendingOrders = await getPendingOrders(product.productId);
+  console.log("Pending order of product:", pendingOrders);
+  let value;
+  if (pendingOrders) {
+    // If there's a pending order, we can show the amount and price
+    value = getGiftCardValue(product as GiftCard, ethers.utils.parseEther(pendingOrders.price.toString()));
+  }
 
   return html`
     <div class="product-detailed-card" data-product-id="${product.productId}">
@@ -223,7 +229,7 @@ export function getSingleGiftCardHtmlDetailed(product: Product) {
             <div class="pricing">
               <div class="available"> ${recipientDenominationsContent} </div>
             </div>
-            <h3>Amount: <input type="number" id="value" /></h3>
+            <h3>Amount: <input type="number" id="value" value="${value}" /></h3>
             <h3 id="price"></h3>
             <button type="button" id="mint-btn">Mint</button>
           </div>
@@ -273,12 +279,28 @@ export async function addGiftCardEvents(giftCard: GiftCard) {
     }
   });
 }
+
+export type MintArgs = {
+  type: "ubiquity-dollar" | "permit";
+  chainId: number;
+  txHash: string;
+  productId: number;
+  country: string;
+};
+
 export async function mint(giftCard: GiftCard) {
+  const country = await getUserCountryCode();
+  if (!country) {
+    toaster.create("error", "Failed to detect your location to pick a suitable card for you.");
+    return;
+  }
+
   const value = (document.getElementById("value") as HTMLInputElement).value;
   if (!value) {
     toaster.create("error", "Please enter the amount.", 300000);
     return;
   }
+
   const price = getTotalPriceOfValue(Number(value), giftCard);
   console.log(`Minting gift card with amount: ${value}, price: ${price} for product ID: ${giftCard.productId}`);
 
@@ -299,37 +321,47 @@ export async function mint(giftCard: GiftCard) {
 
     const ubiquityDollarAddress = ubiquityDollarChainAddresses[chainId];
     if (!ubiquityDollarAddress) {
-      throw new Error(`Ubiquity Dollar contract address not found for chainId: ${chainId}`);
+      toaster.create("error", "You are not on the correct network to mint the card.");
+      return;
     }
     console.log(`Ubiquity Dollar contract address: ${ubiquityDollarAddress}`);
 
-    const ubiquityDollarAbi = [
-      // ERC-20 standard functions, at least 'transfer'
-      "function transfer(address recipient, uint256 amount) returns (bool)",
-      "function decimals() view returns (uint8)",
-    ];
+    const ubiquityDollarAbi = ["function transfer(address recipient, uint256 amount) returns (bool)"];
 
     const ubiquityDollarContract = new ethers.Contract(ubiquityDollarAddress, ubiquityDollarAbi, signer);
 
-    // Get the number of decimals for uAD
-    const decimals = await ubiquityDollarContract.decimals();
-    // ethers.js v5 uses BigNumber for amounts. parseUnits returns a BigNumber.
-    const amountToTransfer = ethers.utils.parseUnits(price.toString(), decimals);
+    const amountToTransfer = ethers.utils.parseEther(price.toString());
 
-    console.log(`Attempting to transfer ${ethers.utils.formatUnits(amountToTransfer, decimals)} uAD to ${giftCardTreasuryAddress}`);
+    console.log(`Attempting to transfer ${ethers.utils.formatEther(amountToTransfer)} UUSD to ${giftCardTreasuryAddress}`);
 
-    const tx = await ubiquityDollarContract.transfer(giftCardTreasuryAddress, amountToTransfer);
-    await tx.wait(); // Wait for the transaction to be mined
+    const pendingOrders = await getPendingOrders(giftCard.productId);
 
-    console.log("Transaction successful:", tx.hash);
+    console.log("Pending order of product:", pendingOrders);
+    let tx, txHash;
+    if (pendingOrders) {
+      txHash = pendingOrders.txHash;
+      console.log(`Using existing transaction hash: ${txHash}`);
+    } else {
+      tx = await ubiquityDollarContract.transfer(giftCardTreasuryAddress, amountToTransfer);
+      txHash = tx.hash;
+    }
 
-    const order = await postOrder({
+    const mintArgs: MintArgs = {
       type: "ubiquity-dollar",
       chainId: provider.network.chainId,
-      txHash: tx.hash,
+      txHash: txHash,
       productId: giftCard.productId,
-      country: await getUserCountryCode(),
-    });
+      country,
+    };
+
+    await updatePendingOrder(mintArgs, price);
+
+    if (tx) {
+      await tx.wait();
+      console.log("Transaction successful:", tx.hash);
+    }
+
+    const order = await postOrder(mintArgs);
     if (!order) {
       toaster.create("error", "Order failed. Try again later.");
       return;
@@ -341,3 +373,58 @@ export async function mint(giftCard: GiftCard) {
     throw error; // Re-throw the error for further handling
   }
 }
+
+async function updatePendingOrder(mintArgs: MintArgs, price: number) {
+  try {
+    const wallet = await getConnectedWallet();
+    console.log("wallet", wallet);
+
+    const pendingOrders = localStorage.getItem("pendingOrders");
+    if (pendingOrders) {
+      const pendingOrdersParsed = JSON.parse(pendingOrders);
+      pendingOrdersParsed[wallet][mintArgs.productId] = { price: price, ...mintArgs };
+      localStorage.setItem("pendingOrders", JSON.stringify(pendingOrdersParsed));
+    } else {
+      localStorage.setItem(
+        "pendingOrders",
+        JSON.stringify({
+          [wallet]: {
+            [mintArgs.productId]: { price: price, ...mintArgs },
+          },
+        })
+      );
+    }
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+async function getPendingOrders(productId: number) {
+  try {
+    const wallet = await getConnectedWallet();
+    const pendingOrders = localStorage.getItem("pendingOrders");
+    if (!pendingOrders) return null;
+    const pendingOrdersParsed = JSON.parse(pendingOrders);
+    return pendingOrdersParsed[wallet][productId] || null;
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+// async function completeOrder(mintArgs: MintArgs, txId: string) {
+//   try {
+//     const wallet = await getConnectedWallet();
+//     const pendingOrders = localStorage.getItem("pendingOrders");
+//     const pendingOrdersParsed = pendingOrders ? JSON.parse(pendingOrders) : {};
+//     delete pendingOrdersParsed[wallet][mintArgs.productId];
+//     localStorage.setItem("pendingOrders", JSON.stringify(pendingOrders));
+
+//     const completedOrders = localStorage.getItem("completedOrders");
+//     const completedOrdersParsed = completedOrders ? JSON.parse(completedOrders) : {};
+//     if (completedOrdersParsed[wallet]) completedOrdersParsed[wallet].push(txId);
+//     else completedOrdersParsed[wallet] = [txId];
+//     localStorage.setItem("completedOrders", JSON.stringify(completedOrdersParsed));
+//   } catch (error) {
+//     console.error(error);
+//   }
+// }
