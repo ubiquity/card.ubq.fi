@@ -368,6 +368,8 @@ export async function mint(giftCard: GiftCard) {
     }
 
     toaster.create("success", `Success. Your gift card will be available for redeem in your cards in a few minutes.`);
+
+    await completeOrder(mintArgs, order.transactionId);
   } catch (error) {
     console.error("Error minting gift card:", error);
     throw error; // Re-throw the error for further handling
@@ -411,20 +413,20 @@ async function getPendingOrders(productId: number) {
   }
 }
 
-// async function completeOrder(mintArgs: MintArgs, txId: string) {
-//   try {
-//     const wallet = await getConnectedWallet();
-//     const pendingOrders = localStorage.getItem("pendingOrders");
-//     const pendingOrdersParsed = pendingOrders ? JSON.parse(pendingOrders) : {};
-//     delete pendingOrdersParsed[wallet][mintArgs.productId];
-//     localStorage.setItem("pendingOrders", JSON.stringify(pendingOrders));
+async function completeOrder(mintArgs: MintArgs, txId: number) {
+  try {
+    const wallet = await getConnectedWallet();
+    const pendingOrders = localStorage.getItem("pendingOrders");
+    const pendingOrdersParsed = pendingOrders ? JSON.parse(pendingOrders) : {};
+    delete pendingOrdersParsed[wallet][mintArgs.productId];
+    localStorage.setItem("pendingOrders", JSON.stringify(pendingOrdersParsed));
 
-//     const completedOrders = localStorage.getItem("completedOrders");
-//     const completedOrdersParsed = completedOrders ? JSON.parse(completedOrders) : {};
-//     if (completedOrdersParsed[wallet]) completedOrdersParsed[wallet].push(txId);
-//     else completedOrdersParsed[wallet] = [txId];
-//     localStorage.setItem("completedOrders", JSON.stringify(completedOrdersParsed));
-//   } catch (error) {
-//     console.error(error);
-//   }
-// }
+    const completedOrders = localStorage.getItem("completedOrders");
+    const completedOrdersParsed = completedOrders ? JSON.parse(completedOrders) : {};
+    if (completedOrdersParsed[wallet]) completedOrdersParsed[wallet].push(txId);
+    else completedOrdersParsed[wallet] = [txId];
+    localStorage.setItem("completedOrders", JSON.stringify(completedOrdersParsed));
+  } catch (error) {
+    console.error(error);
+  }
+}
