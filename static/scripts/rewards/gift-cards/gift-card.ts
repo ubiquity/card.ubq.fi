@@ -275,6 +275,10 @@ export async function addGiftCardEvents(giftCard: GiftCard) {
 }
 export async function mint(giftCard: GiftCard) {
   const value = (document.getElementById("value") as HTMLInputElement).value;
+  if (!value) {
+    toaster.create("error", "Please enter the amount.", 300000);
+    return;
+  }
   const price = getTotalPriceOfValue(Number(value), giftCard);
   console.log(`Minting gift card with amount: ${value}, price: ${price} for product ID: ${giftCard.productId}`);
 
