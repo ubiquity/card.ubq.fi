@@ -8,6 +8,8 @@ import { toaster } from "../toaster";
 import { getGiftCardActivateInfoHtml } from "./activate/activate-html";
 import { getUserCountryCode } from "./helpers";
 import { getConnectedWallet } from "./utils";
+import { activePermit } from ".";
+import { isGiftCardAvailable } from "../../../../shared/helpers";
 
 const html = String.raw;
 
@@ -213,9 +215,13 @@ export async function getSingleGiftCardHtmlDetailed(product: Product) {
   const pendingOrders = await getPendingOrders(product.productId);
   console.log("Pending order of product:", pendingOrders);
   let value;
+
+  console.log("activePermit", activePermit);
   if (pendingOrders) {
     // If there's a pending order, we can show the amount and price
     value = getGiftCardValue(product as GiftCard, ethers.utils.parseEther(pendingOrders.price.toString()));
+  } else if (activePermit) {
+    value = getGiftCardValue(product as GiftCard, activePermit.amount);
   }
 
   return html`
@@ -229,9 +235,9 @@ export async function getSingleGiftCardHtmlDetailed(product: Product) {
             <div class="pricing">
               <div class="available"> ${recipientDenominationsContent} </div>
             </div>
-            <h3>Amount: <input type="number" id="value" value="${value ?? ""}" ${value ? "disabled" : ""} /></h3>
+            <h3>Amount: <input type="number" id="value" value="${value ?? ""}" ${value !== undefined ? "disabled" : ""} /></h3>
             <h3 id="price"></h3>
-            <button type="button" id="mint-btn">${value ? "Retry Mint" : "Mint"}</button>
+            <button type="button" id="mint-btn">Mint</button>
           </div>
         </div>
       </div>
@@ -296,12 +302,17 @@ export async function mint(giftCard: GiftCard) {
   }
 
   const value = (document.getElementById("value") as HTMLInputElement).value;
-  if (!value) {
-    toaster.create("error", "Please enter the amount.", 300000);
+  const price = getTotalPriceOfValue(Number(value), giftCard);
+
+  if (!isGiftCardAvailable(giftCard, ethers.utils.parseEther(price.toString()))) {
+    if (activePermit) {
+      toaster.create("error", "This gift card is not available in your permit amount.");
+    } else {
+      toaster.create("error", "This gift card is not available in the given amount.");
+    }
     return;
   }
 
-  const price = getTotalPriceOfValue(Number(value), giftCard);
   console.log(`Minting gift card with amount: ${value}, price: ${price} for product ID: ${giftCard.productId}`);
 
   if (typeof window.ethereum === "undefined") {
