@@ -84,7 +84,7 @@ export async function onRequest(ctx: Context): Promise<Response> {
 
     const isDuplicate = await isDuplicateOrder(orderId, accessToken);
     if (isDuplicate) {
-      return Response.json({ message: "The permit has already claimed a gift card." }, { status: 400 });
+      return Response.json({ message: "The transaction has already claimed a gift card." }, { status: 400 });
     }
 
     const order = await orderGiftCard(txReceipt.from.toLowerCase(), productId, giftCardValue, orderId, accessToken);
