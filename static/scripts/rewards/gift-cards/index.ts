@@ -1,6 +1,8 @@
+import { ethers } from "ethers";
 import { getGiftCardOrderId } from "../../../../shared/helpers";
 import { GiftCard, OrderTransaction, Product } from "../../../../shared/types";
 import { AppState } from "../app-state";
+import { getActivePermit } from "../permit";
 import { addGiftCardEvents, getGiftCardHtml, getSingleGiftCardHtml, getSingleGiftCardHtmlDetailed } from "./gift-card";
 import { detectCardsEnv, getApiBaseUrl, getUserCountryCode } from "./helpers";
 import { getRedeemCodeHtml } from "./reveal/redeem-code-html";
@@ -15,6 +17,8 @@ const requestInit = {
   },
 };
 
+export const activePermit = getActivePermit();
+
 export async function initClaimGiftCard(app: AppState) {
   const giftCardsSection = document.getElementById("gift-cards");
   if (!giftCardsSection) {
@@ -22,6 +26,13 @@ export async function initClaimGiftCard(app: AppState) {
     return;
   }
   giftCardsSection.innerHTML = "Loading...";
+
+  if (activePermit) {
+    const permitElement = document.getElementById("permit");
+    if (permitElement) {
+      permitElement.innerHTML = `Claim Gift Card for Permit: ${ethers.utils.formatEther(activePermit.amount)} UUSD`;
+    }
+  }
 
   if (loadedProducts.length === 0) {
     void detectCardsEnv();
