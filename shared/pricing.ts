@@ -138,5 +138,6 @@ export function getGiftCardValue(giftCard: GiftCard, reward: BigNumberish, excha
       })}`
     );
   }
-  return Math.floor(giftCardValue * 100) / 100;
+  const value = Math.floor(giftCardValue * 100) / 100;
+  return value < 0 ? 0 : value;
 }
