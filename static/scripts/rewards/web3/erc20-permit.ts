@@ -1,5 +1,4 @@
 import { TransactionResponse } from "@ethersproject/providers";
-import { PermitReward } from "@ubiquibot/permit-generation";
 import { getNetworkExplorer, permit2Address } from "@ubiquity-dao/rpc-handler";
 import { decodeError } from "@ubiquity-os/ethers-decode-error";
 import { BigNumber, BigNumberish, Contract, ethers } from "ethers";
@@ -9,6 +8,7 @@ import { app, AppState } from "../app-state";
 import { supabase } from "../render-transaction/read-claim-data-from-url.ts";
 import { errorToast, MetaMaskError, toaster } from "../toaster";
 import { connectWallet } from "./connect-wallet";
+import { PermitReward } from "@ubiquity-os/permit-generation";
 
 export async function fetchTreasury(permit: PermitReward): Promise<{ balance: BigNumber; allowance: BigNumber; decimals: number; symbol: string }> {
   let balance: BigNumber, allowance: BigNumber, decimals: number, symbol: string;

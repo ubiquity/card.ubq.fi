@@ -1,41 +1,19 @@
+import { PermitReward } from "@ubiquity-os/permit-generation";
 import { ethers } from "ethers";
 import { PostOrderParams } from "../../../../../shared/api-types";
-import { giftCardTreasuryAddress, permit2Address, ubiquityDollarChainAddresses } from "../../../../../shared/constants";
+import { giftCardTreasuryAddress, permit2Address } from "../../../../../shared/constants";
 import { getGiftCardOrderId, getMintMessageToSign } from "../../../../../shared/helpers";
-import { isClaimableForAmount } from "../../../../../shared/pricing";
 import { GiftCard } from "../../../../../shared/types";
 import { postOrder } from "../../../shared/api";
 import { permit2Abi } from "../../abis";
-import { AppState } from "../../app-state";
-import { isErc20Permit } from "../../render-transaction/render-transaction";
+import { app, AppState } from "../../app-state";
 import { toaster } from "../../toaster";
-import { checkPermitClaimable, transferFromPermit, waitForTransaction } from "../../web3/erc20-permit";
+import { checkPermitClaimable, transferFromPermit } from "../../web3/erc20-permit";
+import { completeOrder, getPendingOrder, MintArgs, updatePendingOrder } from "../gift-card";
 import { getApiBaseUrl, getUserCountryCode } from "../helpers";
 import { initClaimGiftCard } from "../index";
-import { getIncompleteMintTx, removeIncompleteMintTx, storeIncompleteMintTx } from "./mint-tx-tracker";
 
-export function attachMintAction(giftCard: GiftCard, app: AppState) {
-  const mintBtn: HTMLElement | null = document.getElementById("mint");
-
-  mintBtn?.addEventListener("click", async () => {
-    mintBtn.setAttribute("data-loading", "true");
-    const productId = Number(document.getElementById("offered-card")?.getAttribute("data-product-id"));
-
-    if (!isErc20Permit(app.reward)) {
-      toaster.create("error", "Only ERC20 permits are allowed to claim a card.");
-    } else if (app.reward.tokenAddress.toLowerCase() !== ubiquityDollarChainAddresses[app.reward.networkId].toLowerCase()) {
-      toaster.create("error", `<a href="https://dao.ubq.fi/card-minting" target="_blank">Payment card can be minted only with Ubiquity Dollar permit.</a>`);
-    } else if (!isClaimableForAmount(giftCard, app.reward.amount)) {
-      toaster.create("error", "Your reward amount is not equal to the price of available card.");
-    } else {
-      await mintGiftCard(productId, app);
-    }
-
-    mintBtn.setAttribute("data-loading", "false");
-  });
-}
-
-async function mintGiftCard(productId: number, app: AppState) {
+export async function mintGiftCard(giftCard: GiftCard, activePermit: PermitReward) {
   if (!app.signer) {
     toaster.create("error", "Connect your wallet.");
     return;
@@ -47,37 +25,56 @@ async function mintGiftCard(productId: number, app: AppState) {
     return;
   }
 
-  const txHash: string = getIncompleteMintTx(app.reward.nonce.toString()) || (await claimPermitToCardTreasury(app));
+  const pendingOrder = await getPendingOrder(giftCard.productId);
 
-  if (txHash) {
-    let signedMessage;
-    try {
-      signedMessage = await app.signer.signMessage(getMintMessageToSign("permit", app.signer.provider.network.chainId, txHash, productId, country));
-    } catch (error) {
-      toaster.create("error", "You did not sign the message to mint a payment card.");
-      return;
-    }
-
-    const order = await postOrder({
-      type: "permit",
-      chainId: app.signer.provider.network.chainId,
-      txHash: txHash,
-      productId,
-      country: country,
-      signedMessage: signedMessage,
-    } as PostOrderParams);
-
-    if (!order) {
-      toaster.create("error", "Order failed. Try again in a few minutes.");
-      return;
-    }
-    await checkForMintingDelay(app);
+  console.log("Pending order of product:", pendingOrder);
+  let tx, txHash;
+  if (pendingOrder) {
+    txHash = pendingOrder.txHash;
+    console.log(`Using existing transaction hash: ${txHash}`);
+  } else {
+    tx = await claimPermitToCardTreasury(app);
+    txHash = tx.hash;
   }
+
+  const mintArgs: MintArgs = {
+    type: "permit",
+    chainId: app.signer.provider.network.chainId,
+    txHash,
+    productId: giftCard.productId,
+    country: country,
+  };
+
+  await updatePendingOrder(mintArgs, Number(ethers.utils.formatEther(activePermit.amount)));
+
+  if (tx) {
+    await tx.wait();
+    console.log("Transaction successful:", tx.hash);
+  }
+
+  let signedMessage;
+  try {
+    signedMessage = await app.signer.signMessage(getMintMessageToSign("permit", app.signer.provider.network.chainId, txHash, giftCard.productId, country));
+  } catch (error) {
+    toaster.create("error", "You did not sign the message to mint a payment card.");
+    return;
+  }
+
+  const order = await postOrder({
+    signedMessage: signedMessage,
+    ...mintArgs,
+  } as PostOrderParams);
+
+  if (!order) {
+    toaster.create("error", "Order failed. Try again in a few minutes.");
+    return;
+  }
+  await checkForMintingDelay(giftCard.productId, order.transactionId);
 }
 
-async function checkForMintingDelay(app: AppState) {
+async function checkForMintingDelay(giftCardId: number, txId: number) {
   if (await hasMintingFinished(app)) {
-    removeIncompleteMintTx(app.reward.nonce.toString());
+    await completeOrder(giftCardId, txId);
     await initClaimGiftCard(app);
   } else {
     const interval = setInterval(async () => {
@@ -109,10 +106,7 @@ async function claimPermitToCardTreasury(app: AppState) {
 
     const tx = await transferFromPermit(permit2Contract, reward, "Processing... Please wait. Do not close this page.");
     if (!tx) return;
-
-    storeIncompleteMintTx(app.reward.nonce.toString(), tx.hash);
-    await waitForTransaction(tx, `Transaction confirmed. Minting your card now.`, app.signer.provider.network.chainId);
-    return tx.hash;
+    return tx;
   }
 }
 

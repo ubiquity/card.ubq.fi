@@ -2,11 +2,11 @@ import { ethers } from "ethers";
 import { getGiftCardOrderId } from "../../../../shared/helpers";
 import { GiftCard, OrderTransaction, Product } from "../../../../shared/types";
 import { AppState } from "../app-state";
-import { getActivePermit } from "../permit";
 import { addGiftCardEvents, getGiftCardHtml, getSingleGiftCardHtml, getSingleGiftCardHtmlDetailed } from "./gift-card";
 import { detectCardsEnv, getApiBaseUrl, getUserCountryCode } from "./helpers";
 import { getRedeemCodeHtml } from "./reveal/redeem-code-html";
 import { attachRevealAction } from "./reveal/reveal-action";
+import { getActivePermit } from "./utils";
 
 let loadedProducts: Product[] = [];
 
@@ -17,8 +17,6 @@ const requestInit = {
   },
 };
 
-export const activePermit = getActivePermit();
-
 export async function initClaimGiftCard(app: AppState) {
   const giftCardsSection = document.getElementById("gift-cards");
   if (!giftCardsSection) {
@@ -26,7 +24,7 @@ export async function initClaimGiftCard(app: AppState) {
     return;
   }
   giftCardsSection.innerHTML = "Loading...";
-
+  const activePermit = getActivePermit();
   if (activePermit) {
     const permitElement = document.getElementById("permit");
     if (permitElement) {

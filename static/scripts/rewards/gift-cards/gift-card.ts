@@ -1,15 +1,16 @@
 import { BigNumberish, ethers } from "ethers";
 import { formatEther } from "ethers/lib/utils";
 import { giftCardTreasuryAddress, ubiquityDollarChainAddresses } from "../../../../shared/constants";
+import { isGiftCardAvailable } from "../../../../shared/helpers";
 import { getFixedPriceToValueMap, getGiftCardValue, getTotalPriceOfValue, isRangePriceGiftCardClaimable } from "../../../../shared/pricing";
 import { GiftCard, Product } from "../../../../shared/types";
 import { postOrder } from "../../shared/api";
+import { app } from "../app-state";
 import { toaster } from "../toaster";
 import { getGiftCardActivateInfoHtml } from "./activate/activate-html";
 import { getUserCountryCode } from "./helpers";
-import { getConnectedWallet } from "./utils";
-import { activePermit } from ".";
-import { isGiftCardAvailable } from "../../../../shared/helpers";
+import { mintGiftCard } from "./mint/mint-action";
+import { getActivePermit, getConnectedWallet } from "./utils";
 
 const html = String.raw;
 
@@ -212,10 +213,10 @@ export async function getSingleGiftCardHtmlDetailed(product: Product) {
 
   // Pre-calculate content using helper functions
   const recipientDenominationsContent = renderRecipientDenominations(product);
-  const pendingOrders = await getPendingOrders(product.productId);
+  const pendingOrders = await getPendingOrder(product.productId);
   console.log("Pending order of product:", pendingOrders);
   let value;
-
+  const activePermit = getActivePermit();
   console.log("activePermit", activePermit);
   if (pendingOrders) {
     // If there's a pending order, we can show the amount and price
@@ -255,6 +256,7 @@ export async function getSingleGiftCardHtmlDetailed(product: Product) {
 }
 
 export async function addGiftCardEvents(giftCard: GiftCard) {
+  console.log("app", app);
   document.getElementById("mint-btn")?.addEventListener("click", async (event) => {
     const button = event.currentTarget as HTMLButtonElement;
     if (button.dataset.loading === "true") return; // Prevent double clicks
@@ -294,6 +296,10 @@ export type MintArgs = {
   country: string;
 };
 
+export type PendingOrder = MintArgs & {
+  price: number;
+};
+
 export async function mint(giftCard: GiftCard) {
   const country = await getUserCountryCode();
   if (!country) {
@@ -303,6 +309,7 @@ export async function mint(giftCard: GiftCard) {
 
   const value = (document.getElementById("value") as HTMLInputElement).value;
   const price = getTotalPriceOfValue(Number(value), giftCard);
+  const activePermit = getActivePermit();
 
   if (!isGiftCardAvailable(giftCard, ethers.utils.parseEther(price.toString()))) {
     if (activePermit) {
@@ -330,6 +337,29 @@ export async function mint(giftCard: GiftCard) {
 
     console.log(`Connected to chainId: ${chainId}`);
 
+    if (activePermit) {
+      console.log("Using active permit for minting gift card.", activePermit);
+
+      await mintGiftCard(giftCard, activePermit);
+
+      const mintArgs: MintArgs = {
+        type: "permit",
+        chainId: chainId,
+        txHash: activePermit.txHash,
+        productId: giftCard.productId,
+        country: country,
+      };
+      await updatePendingOrder(mintArgs, price);
+      const order = await postOrder(mintArgs);
+      if (!order) {
+        toaster.create("error", "Order failed. Try again later.");
+        return;
+      }
+      toaster.create("success", `Success. Your gift card will be available for redeem in your cards in a few minutes.`);
+      await completeOrder(giftCard.productId, order.transactionId);
+      return;
+    }
+
     const ubiquityDollarAddress = ubiquityDollarChainAddresses[chainId];
     if (!ubiquityDollarAddress) {
       toaster.create("error", "You are not on the correct network to mint the card.");
@@ -345,12 +375,12 @@ export async function mint(giftCard: GiftCard) {
 
     console.log(`Attempting to transfer ${ethers.utils.formatEther(amountToTransfer)} UUSD to ${giftCardTreasuryAddress}`);
 
-    const pendingOrders = await getPendingOrders(giftCard.productId);
+    const pendingOrder = await getPendingOrder(giftCard.productId);
 
-    console.log("Pending order of product:", pendingOrders);
+    console.log("Pending order of product:", pendingOrder);
     let tx, txHash;
-    if (pendingOrders) {
-      txHash = pendingOrders.txHash;
+    if (pendingOrder) {
+      txHash = pendingOrder.txHash;
       console.log(`Using existing transaction hash: ${txHash}`);
     } else {
       tx = await ubiquityDollarContract.transfer(giftCardTreasuryAddress, amountToTransfer);
@@ -380,14 +410,14 @@ export async function mint(giftCard: GiftCard) {
 
     toaster.create("success", `Success. Your gift card will be available for redeem in your cards in a few minutes.`);
 
-    await completeOrder(mintArgs, order.transactionId);
+    await completeOrder(giftCard.productId, order.transactionId);
   } catch (error) {
     console.error("Error minting gift card:", error);
     throw error; // Re-throw the error for further handling
   }
 }
 
-async function updatePendingOrder(mintArgs: MintArgs, price: number) {
+export async function updatePendingOrder(mintArgs: MintArgs, price: number) {
   try {
     const wallet = await getConnectedWallet();
     console.log("wallet", wallet);
@@ -412,7 +442,7 @@ async function updatePendingOrder(mintArgs: MintArgs, price: number) {
   }
 }
 
-async function getPendingOrders(productId: number) {
+export async function getPendingOrder(productId: number): Promise<PendingOrder | null> {
   try {
     const wallet = await getConnectedWallet();
     const pendingOrders = localStorage.getItem("pendingOrders");
@@ -421,15 +451,16 @@ async function getPendingOrders(productId: number) {
     return pendingOrdersParsed[wallet][productId] || null;
   } catch (error) {
     console.error(error);
+    return null;
   }
 }
 
-async function completeOrder(mintArgs: MintArgs, txId: number) {
+export async function completeOrder(giftCardId: number, txId: number) {
   try {
     const wallet = await getConnectedWallet();
     const pendingOrders = localStorage.getItem("pendingOrders");
     const pendingOrdersParsed = pendingOrders ? JSON.parse(pendingOrders) : {};
-    delete pendingOrdersParsed[wallet][mintArgs.productId];
+    delete pendingOrdersParsed[wallet][giftCardId];
     localStorage.setItem("pendingOrders", JSON.stringify(pendingOrdersParsed));
 
     const completedOrders = localStorage.getItem("completedOrders");
