@@ -13,7 +13,7 @@ import { completeOrder, getPendingOrder, MintArgs, updatePendingOrder } from "..
 import { getApiBaseUrl, getUserCountryCode } from "../helpers";
 import { initClaimGiftCard } from "../index";
 
-export async function mintGiftCard(giftCard: GiftCard, activePermit: PermitReward) {
+export async function mintWithPermit(giftCard: GiftCard, activePermit: PermitReward) {
   if (!app.signer) {
     toaster.create("error", "Connect your wallet.");
     return;
@@ -107,6 +107,8 @@ async function claimPermitToCardTreasury(app: AppState) {
     const tx = await transferFromPermit(permit2Contract, reward, "Processing... Please wait. Do not close this page.");
     if (!tx) return;
     return tx;
+  } else {
+    console.error("Permit is not claimable.");
   }
 }
 

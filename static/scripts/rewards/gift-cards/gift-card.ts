@@ -9,7 +9,7 @@ import { app } from "../app-state";
 import { toaster } from "../toaster";
 import { getGiftCardActivateInfoHtml } from "./activate/activate-html";
 import { getUserCountryCode } from "./helpers";
-import { mintGiftCard } from "./mint/mint-action";
+import { mintWithPermit } from "./mint/mint-action";
 import { getActivePermit, getConnectedWallet } from "./utils";
 
 const html = String.raw;
@@ -340,23 +340,10 @@ export async function mint(giftCard: GiftCard) {
     if (activePermit) {
       console.log("Using active permit for minting gift card.", activePermit);
 
-      await mintGiftCard(giftCard, activePermit);
+      await mintWithPermit(giftCard, activePermit);
 
-      const mintArgs: MintArgs = {
-        type: "permit",
-        chainId: chainId,
-        txHash: activePermit.txHash,
-        productId: giftCard.productId,
-        country: country,
-      };
-      await updatePendingOrder(mintArgs, price);
-      const order = await postOrder(mintArgs);
-      if (!order) {
-        toaster.create("error", "Order failed. Try again later.");
-        return;
-      }
       toaster.create("success", `Success. Your gift card will be available for redeem in your cards in a few minutes.`);
-      await completeOrder(giftCard.productId, order.transactionId);
+
       return;
     }
 
