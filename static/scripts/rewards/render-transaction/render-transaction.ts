@@ -1,22 +1,18 @@
-import type { PermitReward } from "@ubiquity-os/permit-generation";
+import { TokenType, type PermitReward } from "@ubiquity-os/permit-generation";
 import { app } from "../app-state";
-import { buttonController, getMakeClaimButton, viewClaimButton } from "../button-controller";
-import { claimErc20PermitHandlerWrapper, fetchTreasury } from "../web3/erc20-permit";
-import { claimErc721PermitHandler } from "../web3/erc721-permit";
+
+import { fetchTreasury } from "../web3/erc20-permit";
 import { insertErc20PermitTableData, insertErc721PermitTableData } from "./insert-table-data";
 import { renderEnsName } from "./render-ens-name";
 import { renderNftSymbol, renderTokenSymbol } from "./render-token-symbol";
-import { TokenType } from "@ubiquibot/permit-generation/types";
+
 import { useRpcHandler } from "../../../../shared/use-rpc-handler";
-import { removeAllEventListeners } from "./utils";
 
 const carousel = document.getElementById("carousel") as Element;
 const table = document.querySelector(`table`) as HTMLTableElement;
 type Success = boolean;
 
 export async function renderTransaction(): Promise<Success> {
-  removeAllEventListeners(getMakeClaimButton()) as HTMLButtonElement;
-
   if (app.claims && app.claims.length > 1) {
     carousel.className = "ready";
     const rewardsCount = document.getElementById("rewardsCount") as Element;
@@ -24,7 +20,6 @@ export async function renderTransaction(): Promise<Success> {
   }
 
   if (!app.reward) {
-    buttonController.hideAll();
     console.log("No reward found");
     return false;
   }
@@ -52,14 +47,6 @@ export async function renderTransaction(): Promise<Success> {
     const toElement = document.getElementById(`rewardRecipient`) as Element;
     renderEnsName({ element: toElement, address: app.reward.beneficiary }).catch(console.error);
 
-    if (app.claimTxs[app.reward.nonce.toString()] !== undefined) {
-      buttonController.onlyShowViewClaim();
-      viewClaimButton.addEventListener("click", () => window.open(`${app.currentExplorerUrl}/tx/${app.claimTxs[app.reward.nonce.toString()]}`));
-    } else if (window.ethereum) {
-      buttonController.hideViewClaim();
-      getMakeClaimButton().addEventListener("click", claimErc20PermitHandlerWrapper(app));
-    }
-
     table.setAttribute(`data-make-claim`, "ok");
   } else {
     const requestedAmountElement = insertErc721PermitTableData(app.reward, table);
@@ -74,8 +61,6 @@ export async function renderTransaction(): Promise<Success> {
 
     const toElement = document.getElementById(`rewardRecipient`) as Element;
     renderEnsName({ element: toElement, address: app.reward.beneficiary }).catch(console.error);
-
-    getMakeClaimButton().addEventListener("click", claimErc721PermitHandler(app.reward));
   }
 
   return true;

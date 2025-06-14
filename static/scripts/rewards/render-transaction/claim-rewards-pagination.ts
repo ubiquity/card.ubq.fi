@@ -1,10 +1,9 @@
 import { app } from "../app-state";
 import { initClaimGiftCard } from "../gift-cards/index";
-import { buttonController, getMakeClaimButton } from "../button-controller";
-import { table, updateButtonVisibility } from "./fetch-permits";
-import { renderTransaction } from "./render-transaction";
-import { removeAllEventListeners } from "./utils";
+
 import { toaster } from "../toaster";
+import { table, updateButtonVisibility } from "./read-claim-data-from-url.ts";
+import { renderTransaction } from "./render-transaction";
 
 const nextTxButton = document.getElementById("nextTx");
 const prevTxButton = document.getElementById("prevTx");
@@ -29,11 +28,10 @@ function transactionHandler(direction: "next" | "previous") {
     toaster.create("error", "Please wait for the current transaction to complete.");
     return;
   }
-  removeAllEventListeners(getMakeClaimButton()) as HTMLButtonElement;
+
   direction === "next" ? app.nextPermit() : app.previousPermit();
   table.setAttribute(`data-make-claim`, "error");
-  buttonController.hideViewClaim();
-  buttonController.hideLoader();
+
   updateButtonVisibility(app).catch(console.error);
   initClaimGiftCard(app).catch(console.error);
   renderTransaction().catch(console.error);

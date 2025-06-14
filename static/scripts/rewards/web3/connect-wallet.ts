@@ -1,6 +1,5 @@
 import { JsonRpcSigner } from "@ethersproject/providers";
 import { ethers } from "ethers";
-import { buttonController } from "../button-controller";
 import { toaster } from "../toaster";
 
 type StandardError = {
@@ -45,7 +44,6 @@ export async function connectWallet(): Promise<JsonRpcSigner | null> {
     const address = await signer.getAddress();
 
     if (!address) {
-      buttonController.hideAll();
       console.error("Wallet not connected");
       return null;
     }
@@ -65,7 +63,6 @@ function connectErrorHandler(error: unknown) {
         toaster.create("warning", "Please use a mobile-friendly Web3 browser such as MetaMask to collect this reward", Infinity);
       } else if (!window.ethereum) {
         toaster.create("warning", "Please use a web3 enabled browser to collect this reward.", Infinity);
-        buttonController.hideAll();
       }
     } else {
       toaster.create("error", error.message);
