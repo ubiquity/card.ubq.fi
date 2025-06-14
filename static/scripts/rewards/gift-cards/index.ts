@@ -1,11 +1,8 @@
 import { ethers } from "ethers";
-import { getGiftCardOrderId } from "../../../../shared/helpers";
-import { GiftCard, OrderTransaction, Product } from "../../../../shared/types";
+import { GiftCard, Product } from "../../../../shared/types";
 import { AppState } from "../app-state";
-import { addGiftCardEvents, getGiftCardHtml, getSingleGiftCardHtml, getSingleGiftCardHtmlDetailed } from "./gift-card";
+import { addGiftCardEvents, getSingleGiftCardHtml, getSingleGiftCardHtmlDetailed } from "./gift-card";
 import { detectCardsEnv, getApiBaseUrl, getUserCountryCode } from "./helpers";
-import { getRedeemCodeHtml } from "./reveal/redeem-code-html";
-import { attachRevealAction } from "./reveal/reveal-action";
 import { getActivePermit } from "./utils";
 
 let loadedProducts: Product[] = [];
@@ -58,32 +55,6 @@ export async function initClaimGiftCard(app: AppState) {
   }
 
   addProductsHtml(loadedProducts, app, giftCardsSection);
-
-  const retrieveOrderUrl = `${getApiBaseUrl()}/get-order?orderId=${getGiftCardOrderId(app.reward.beneficiary, app.reward.signature)}`;
-
-  const [orderResponse] = await Promise.all([fetch(retrieveOrderUrl, requestInit)]);
-
-  if (orderResponse.status == 200) {
-    const { transaction, product } = (await orderResponse.json()) as {
-      transaction: OrderTransaction;
-      product: GiftCard | null;
-    };
-
-    addPurchasedCardHtml(product, transaction, app, giftCardsSection);
-  } else {
-    giftCardsSection.innerHTML = "<p class='card-error'>There was a problem in fetching gift cards. Please try again later.</p>";
-  }
-}
-
-function addPurchasedCardHtml(giftCard: GiftCard | null, transaction: OrderTransaction, app: AppState, giftCardsSection: HTMLElement) {
-  const htmlParts: string[] = [];
-  htmlParts.push(`<h2 class="card-heading">Your virtual card</h2>`);
-  htmlParts.push(getRedeemCodeHtml(transaction));
-  if (giftCard) {
-    htmlParts.push(getGiftCardHtml(giftCard, app.reward.amount));
-  }
-  giftCardsSection.innerHTML = htmlParts.join("");
-  attachRevealAction(transaction, app);
 }
 
 function addProductsHtml(products: Product[], app: AppState, giftCardsSection: HTMLElement) {

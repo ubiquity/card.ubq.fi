@@ -1,14 +1,13 @@
 import { createClient } from "@supabase/supabase-js";
+import { decodePermits } from "@ubiquibot/permit-generation/handlers";
+import { getNetworkName, NetworkId } from "@ubiquity-dao/rpc-handler";
+import { ethers } from "ethers";
+import { useRpcHandler } from "../../../../shared/use-rpc-handler";
 import { app, AppState } from "../app-state";
 import { toaster } from "../toaster";
 import { connectWallet } from "../web3/connect-wallet";
 import { checkRenderInvalidatePermitAdminControl, checkRenderMakeClaimControl } from "../web3/erc20-permit";
-import { setClaimMessage } from "./set-claim-message";
-import { useRpcHandler } from "../../../../shared/use-rpc-handler";
 import { switchNetwork } from "../web3/switch-network";
-import { ethers } from "ethers";
-import { getNetworkName, NetworkId } from "@ubiquity-dao/rpc-handler";
-import { decodePermits } from "@ubiquibot/permit-generation/handlers";
 
 declare const SUPABASE_URL: string;
 declare const SUPABASE_ANON_KEY: string;
@@ -21,9 +20,6 @@ const base64encodedTxData = urlParams.get("claim");
 
 export async function readClaimDataFromUrl(app: AppState) {
   if (!base64encodedTxData) {
-    // No claim data found
-    setClaimMessage({ type: "Notice", message: `No claim data found.` });
-    table.setAttribute(`data-make-claim`, "error");
     return;
   }
 
