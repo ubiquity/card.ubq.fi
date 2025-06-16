@@ -1,5 +1,6 @@
-import { OrderTransaction, RedeemCode } from "../../../../shared/types";
+import { OrderTransaction } from "../../../../shared/types";
 import { getApiBaseUrl } from "./helpers";
+import { showRedeemCode } from "./reveal/reveal-action";
 import { getConnectedWallet } from "./utils";
 
 export async function showMyCards(cardsSection: HTMLElement): Promise<void> {
@@ -50,11 +51,6 @@ export async function showMyCards(cardsSection: HTMLElement): Promise<void> {
                   </div>
                   <button class="btn reveal-button" data-transaction-id="${transaction.transactionId}">
                     <span class="action">Show Redeem Code</span>
-                    <span class="loader hidden">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
-                      </svg>
-                    </span>
                   </button>
                 </div>
               </div>
@@ -68,50 +64,19 @@ export async function showMyCards(cardsSection: HTMLElement): Promise<void> {
         button.addEventListener("click", async (event) => {
           const clickedButton = event.currentTarget as HTMLButtonElement;
           const transactionId = clickedButton.dataset.transactionId;
-          const cardNumberSpan = document.getElementById(`card-number-${transactionId}`);
-          const pinCodeSpan = document.getElementById(`pin-code-${transactionId}`);
-          const loader = clickedButton.querySelector(".loader") as HTMLElement;
-          const action = clickedButton.querySelector(".action") as HTMLElement;
-
-          if (!transactionId || !cardNumberSpan || !pinCodeSpan) {
-            console.error("Missing elements or transaction ID for reveal button.");
+          if (!transactionId) {
+            console.error("Transaction ID is missing for reveal button.");
             return;
           }
 
-          clickedButton.setAttribute("data-loading", "true");
-          action.classList.add("hidden");
-          loader.classList.remove("hidden");
-          clickedButton.disabled = true;
+          const redeemCodeJson = await showRedeemCode(Number(transactionId));
 
-          try {
-            // Assume an API endpoint exists to get redeem code by transactionId
-            const revealResponse = await fetch(`/api/redeem-code/${transactionId}`);
-
-            if (revealResponse.ok) {
-              const redeemCode: RedeemCode = await revealResponse.json();
-              cardNumberSpan.textContent = redeemCode.cardNumber;
-              pinCodeSpan.textContent = redeemCode.pinCode;
-              clickedButton.textContent = "Revealed";
-            } else {
-              const errorData = await revealResponse.json();
-              cardNumberSpan.textContent = `Error: ${errorData.message || "Failed to reveal"}`;
-              pinCodeSpan.textContent = `Error: ${errorData.message || "Failed to reveal"}`;
-              console.error(`Failed to reveal card ${transactionId}:`, errorData);
-              clickedButton.textContent = "Error";
-            }
-          } catch (revealError) {
-            console.error(`Network or unexpected error revealing card ${transactionId}:`, revealError);
-            cardNumberSpan.textContent = "Error loading";
-            pinCodeSpan.textContent = "Error loading";
-            clickedButton.textContent = "Error";
-          } finally {
-            clickedButton.setAttribute("data-loading", "false");
-            action.classList.remove("hidden");
-            loader.classList.add("hidden");
-            if (clickedButton.textContent === "Error") {
-              clickedButton.disabled = false;
-            }
+          const redeemCodeElement = document.getElementById(`redeem-code-${transactionId}`);
+          if (!redeemCodeElement) {
+            console.error(`Redeem code element not found for transaction ID ${transactionId}.`);
+            return;
           }
+          redeemCodeElement.innerHTML = JSON.stringify(redeemCodeJson, null, 2);
         });
       });
     } else if (response.status === 401) {
