@@ -14,13 +14,7 @@ const requestInit = {
   },
 };
 
-export async function initClaimGiftCard(app: AppState) {
-  const giftCardsSection = document.getElementById("gift-cards");
-  if (!giftCardsSection) {
-    console.error("Missing gift cards section #gift-cards");
-    return;
-  }
-  giftCardsSection.innerHTML = "Loading...";
+export async function showCatalog(catalogElement: HTMLElement, app: AppState) {
   const activePermit = getActivePermit();
   if (activePermit) {
     const permitElement = document.getElementById("permit");
@@ -35,7 +29,7 @@ export async function initClaimGiftCard(app: AppState) {
     const countryCode = await getUserCountryCode();
 
     if (!countryCode) {
-      giftCardsSection.innerHTML = `<p class="card-error">Failed to load suitable virtual cards for you. Refresh or try disabling adblocker.</p>`;
+      catalogElement.innerHTML = `<p class="card-error">Failed to load suitable virtual cards for you. Refresh or try disabling adblocker.</p>`;
       return;
     }
     loadedProducts = await loadProducts();
@@ -46,15 +40,15 @@ export async function initClaimGiftCard(app: AppState) {
     const product = loadedProducts.find((p) => p.productId === productSku);
     if (product) {
       console.log("product", product);
-      giftCardsSection.innerHTML = await getSingleGiftCardHtmlDetailed(product);
+      catalogElement.innerHTML = await getSingleGiftCardHtmlDetailed(product);
       await addGiftCardEvents(product as GiftCard);
     } else {
-      giftCardsSection.innerHTML = "<p class='card-error'>Unable to find a gift card.</p>";
+      catalogElement.innerHTML = "<p class='card-error'>Unable to find a gift card.</p>";
     }
     return;
   }
 
-  addProductsHtml(loadedProducts, app, giftCardsSection);
+  addProductsHtml(loadedProducts, app, catalogElement);
 }
 
 function addProductsHtml(products: Product[], app: AppState, giftCardsSection: HTMLElement) {

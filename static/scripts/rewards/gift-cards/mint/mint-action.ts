@@ -7,11 +7,11 @@ import { GiftCard } from "../../../../../shared/types";
 import { postOrder } from "../../../shared/api";
 import { permit2Abi } from "../../abis";
 import { app, AppState } from "../../app-state";
+import { init } from "../../init";
 import { toaster } from "../../toaster";
 import { checkPermitClaimable, transferFromPermit } from "../../web3/erc20-permit";
 import { completeOrder, getPendingOrder, MintArgs, updatePendingOrder } from "../gift-card";
 import { getApiBaseUrl, getUserCountryCode } from "../helpers";
-import { initClaimGiftCard } from "../index";
 
 export async function mintWithPermit(giftCard: GiftCard, activePermit: PermitReward) {
   if (!app.signer) {
@@ -75,12 +75,12 @@ export async function mintWithPermit(giftCard: GiftCard, activePermit: PermitRew
 async function checkForMintingDelay(giftCardId: number, txId: number) {
   if (await hasMintingFinished(app)) {
     await completeOrder(giftCardId, txId);
-    await initClaimGiftCard(app);
+    await init();
   } else {
     const interval = setInterval(async () => {
       if (await hasMintingFinished(app)) {
         clearInterval(interval);
-        await initClaimGiftCard(app);
+        await init();
       } else {
         toaster.create("info", "Minting is in progress. Please wait...");
       }

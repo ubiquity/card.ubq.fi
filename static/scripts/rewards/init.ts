@@ -1,5 +1,6 @@
 import { app } from "./app-state";
-import { initClaimGiftCard } from "./gift-cards/index";
+import { showCatalog } from "./gift-cards/index";
+import { showMyCards } from "./gift-cards/my-cards";
 import { displayCommitHash } from "./render-transaction/display-commit-hash";
 import { readClaimDataFromUrl } from "./render-transaction/read-claim-data-from-url.ts";
 import { grid } from "./the-grid";
@@ -17,8 +18,23 @@ function gridLoadedCallback() {
 }
 readClaimDataFromUrl(app).catch(console.error); // @DEV: read
 
-initClaimGiftCard(app).catch(console.error);
-
+init().catch(console.error);
 window.addEventListener("hashchange", () => {
-  initClaimGiftCard(app).catch(console.error);
+  init().catch(console.error);
 });
+
+export async function init() {
+  const cardsSection = document.getElementById("gift-cards");
+  if (!cardsSection) {
+    console.error("Missing gift cards section #gift-cards");
+    return;
+  }
+  cardsSection.innerHTML = "Loading...";
+
+  const hash = window.location.hash.replace("#/", "");
+  if (hash == "my-cards") {
+    await showMyCards(cardsSection);
+  } else {
+    await showCatalog(cardsSection, app).catch(console.error);
+  }
+}
