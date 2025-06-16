@@ -1,11 +1,11 @@
 import { verifyMessage } from "@ethersproject/wallet";
-import { getGiftCardOrderId, getRevealMessageToSign } from "../shared/helpers";
 import { getRedeemCodeParamsSchema } from "../shared/api-types";
-import { getTransactionFromOrderId } from "./get-order";
+import { getRevealMessageToSign } from "../shared/helpers";
+import { RedeemCode } from "../shared/types";
+import { fetchIndividualTransactions } from "./my-cards";
 import { commonHeaders, getAccessToken, getReloadlyApiBaseUrl } from "./utils/shared";
 import { AccessToken, Context, ReloadlyFailureResponse, ReloadlyRedeemCodeResponse } from "./utils/types";
 import { validateEnvVars, validateRequestMethod } from "./utils/validators";
-import { RedeemCode } from "../shared/types";
 
 export async function onRequest(ctx: Context): Promise<Response> {
   try {
@@ -20,12 +20,11 @@ export async function onRequest(ctx: Context): Promise<Response> {
       transactionId: searchParams.get("transactionId"),
       signedMessage: searchParams.get("signedMessage"),
       wallet: searchParams.get("wallet"),
-      permitSig: searchParams.get("permitSig"),
     });
     if (!result.success) {
       throw new Error(`Invalid parameters: ${JSON.stringify(result.error.errors)}`);
     }
-    const { transactionId, signedMessage, wallet, permitSig } = result.data;
+    const { transactionId, signedMessage, wallet } = result.data;
 
     const errorResponse = Response.json({ message: "Given details are not valid to redeem code." }, { status: 403 });
 
@@ -39,17 +38,14 @@ export async function onRequest(ctx: Context): Promise<Response> {
       return errorResponse;
     }
 
-    const orderId = getGiftCardOrderId(wallet, permitSig);
-    const order = await getTransactionFromOrderId(orderId, accessToken);
-
-    if (order?.transactionId != transactionId) {
-      console.error(
-        `Given transaction does not match with retrieved transactionId using generated orderId: ${JSON.stringify({
-          transactionId,
-          orderId,
-          transactionIdFromOrder: order?.transactionId,
-        })}`
-      );
+    const transactions = await fetchIndividualTransactions([transactionId], accessToken);
+    if (transactions.failedFetches.length > 0) {
+      console.error(`Failed to fetch transaction details: ${JSON.stringify(transactions.failedFetches)}`);
+      return errorResponse;
+    }
+    const transaction = transactions.foundTransactions[0];
+    if (transaction.customIdentifier.toLowerCase().indexOf(wallet.toLowerCase()) !== 0) {
+      console.error(`Transaction does not belong to the connected wallet: ${JSON.stringify({ transaction, wallet })}`);
       return errorResponse;
     }
 
