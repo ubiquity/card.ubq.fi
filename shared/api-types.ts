@@ -28,7 +28,6 @@ export const getRedeemCodeParamsSchema = z.object({
   transactionId: z.coerce.number(),
   signedMessage: z.string(),
   wallet: z.string(),
-  permitSig: z.string(),
 });
 
 export type GetRedeemCodeParams = z.infer<typeof getRedeemCodeParamsSchema>;
