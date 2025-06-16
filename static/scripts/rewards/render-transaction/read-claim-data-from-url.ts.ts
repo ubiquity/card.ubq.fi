@@ -19,6 +19,12 @@ const urlParams = new URLSearchParams(window.location.search);
 const base64encodedTxData = urlParams.get("claim");
 
 export async function readClaimDataFromUrl(app: AppState) {
+  try {
+    app.signer = await connectWallet();
+  } catch (error) {
+    /* empty */
+  }
+
   if (!base64encodedTxData) {
     return;
   }
@@ -34,12 +40,6 @@ export async function readClaimDataFromUrl(app: AppState) {
     } else {
       toaster.create("error", JSON.stringify(e));
     }
-  }
-
-  try {
-    app.signer = await connectWallet();
-  } catch (error) {
-    /* empty */
   }
 }
 
