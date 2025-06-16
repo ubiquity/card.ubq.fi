@@ -21,9 +21,8 @@ export async function onRequest(ctx: Context): Promise<Response> {
   try {
     const transactionIds = await validateAndExtractTransactionIds(ctx);
     const accessToken = await authenticateReloadly(ctx.env);
-    const reloadlyApiBaseUrl = getReloadlyApiBaseUrl(accessToken.isSandbox);
 
-    const { foundTransactions, failedFetches } = await fetchIndividualTransactions(transactionIds, accessToken, reloadlyApiBaseUrl);
+    const { foundTransactions, failedFetches } = await fetchIndividualTransactions(transactionIds, accessToken);
 
     return buildFinalResponse(foundTransactions, failedFetches);
   } catch (error) {
@@ -85,15 +84,14 @@ async function authenticateReloadly(env: Context["env"]): Promise<AccessTokenRes
  * Fetches individual transactions from Reloadly API using Promise.allSettled.
  * Returns an object containing successfully found transactions and any failed fetches.
  */
-async function fetchIndividualTransactions(
+export async function fetchIndividualTransactions(
   transactionIds: number[],
-  accessToken: AccessTokenResponse,
-  reloadlyApiBaseUrl: string
+  accessToken: AccessTokenResponse
 ): Promise<{ foundTransactions: OrderTransaction[]; failedFetches: { id: number; status: string; message: string }[] }> {
   console.log(`Attempting to retrieve individual gift cards for IDs: ${transactionIds.join(", ")} from Reloadly API`);
 
   const fetchPromises = transactionIds.map((id) => {
-    const url = `${reloadlyApiBaseUrl}/reports/transactions/${id}`;
+    const url = `${getReloadlyApiBaseUrl(accessToken.isSandbox)}/reports/transactions/${id}`;
     console.log(`Fetching transaction ${id} from ${url}`);
     return fetch(url, {
       method: "GET",
