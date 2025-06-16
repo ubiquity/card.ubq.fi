@@ -39,15 +39,8 @@ export async function showMyCards(cardsSection: HTMLElement): Promise<void> {
             <div class="card-section my-card">
               <div class="details">
                 <h3>${transaction.product.productName}</h3>
-             
-                <div class="pricing">
-                  <div class="available">
-                    <div class="amount-option">
-                      <div class="currency">${transaction.currencyCode}</div>
-                      <div class="amount">${transaction.amount.toFixed(2)}</div>
-                    </div>
-                  </div>
-                </div>
+                <p><strong>Value: </strong>${transaction.product.currencyCode}${transaction.product.totalPrice.toFixed(2)}</p>
+                <p><strong>Price: </strong>${transaction.currencyCode}${transaction.amount.toFixed(2)}</p>
                 <p><strong>Transaction ID:</strong> ${transaction.transactionId}</p>
                 <p><strong>SKU:</strong><a href="/#/${transaction.product.productId}">${transaction.product.productId}</a></p>
                 <div id="redeem-code-${transaction.transactionId}" class="redeem-info">
@@ -56,7 +49,7 @@ export async function showMyCards(cardsSection: HTMLElement): Promise<void> {
                     <p>xxxxxxxxxxxxxxxxx</p>
                   </div>
                   <button class="btn reveal-button" data-transaction-id="${transaction.transactionId}">
-                    <span class="action">Reveal</span>
+                    <span class="action">Show Redeem Code</span>
                     <span class="loader hidden">
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
