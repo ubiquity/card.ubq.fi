@@ -33,31 +33,28 @@ export async function showMyCards(cardsSection: HTMLElement): Promise<void> {
         cardsSection.innerHTML = "<p class='card-error'>No gift card details found for your transactions.</p>";
         return;
       }
-
+      const cardsHtml: string[] = [];
       transactions.forEach((transaction) => {
-        const cardHtml = `
-            <div class="card-section">
-              <div class="card-heading">
-                <img src="${transaction.product.brand.logoUrls?.[0] || "https://placehold.co/200x150/00bfff/ffffff?text=No+Image"}" 
-                     alt="${transaction.product.productName} Logo" class="detailed-card-image"
-                     onerror="this.onerror=null; this.src='https://placehold.co/200x150/00bfff/ffffff?text=No+Image';">
-              </div>
+        cardsHtml.push(`
+            <div class="card-section my-card">
               <div class="details">
                 <h3>${transaction.product.productName}</h3>
-                <p class="brand-name">${transaction.product.brand.brandName}</p>
+             
                 <div class="pricing">
                   <div class="available">
                     <div class="amount-option">
-                      <div class="currency">${transaction.product.currencyCode}</div>
-                      <div class="amount">${transaction.product.totalPrice.toFixed(2)}</div>
+                      <div class="currency">${transaction.currencyCode}</div>
+                      <div class="amount">${transaction.amount.toFixed(2)}</div>
                     </div>
                   </div>
                 </div>
                 <p><strong>Transaction ID:</strong> ${transaction.transactionId}</p>
-                <p><strong>Status:</strong> ${transaction.status}</p>
+                <p><strong>SKU:</strong><a href="/#/${transaction.product.productId}">${transaction.product.productId}</a></p>
                 <div id="redeem-code-${transaction.transactionId}" class="redeem-info">
-                  <p><strong>Card Number:</strong> <span id="card-number-${transaction.transactionId}">XXXXXXXXXX</span></p>
-                  <p><strong>PIN:</strong> <span id="pin-code-${transaction.transactionId}">XXXXXXXXXX</span></p>
+                  <div class="card-number">
+                    <p>xxxxxxxxxxxxxxxxx</p>
+                    <p>xxxxxxxxxxxxxxxxx</p>
+                  </div>
                   <button class="btn reveal-button" data-transaction-id="${transaction.transactionId}">
                     <span class="action">Reveal</span>
                     <span class="loader hidden">
@@ -69,10 +66,10 @@ export async function showMyCards(cardsSection: HTMLElement): Promise<void> {
                 </div>
               </div>
             </div>
-          `;
-        cardsSection.insertAdjacentHTML("beforeend", cardHtml);
+          `);
       });
 
+      cardsSection.innerHTML = cardsHtml.join("");
       // Attach event listeners to all "Reveal" buttons
       document.querySelectorAll(".reveal-button").forEach((button) => {
         button.addEventListener("click", async (event) => {

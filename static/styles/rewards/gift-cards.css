@@ -508,3 +508,7 @@
   top: 12px;
   right: 12px;
 }
+.my-card {
+  border: 1px solid var(--border-color);
+  margin: 4px;
+}
