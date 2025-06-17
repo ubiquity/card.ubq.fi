@@ -78,13 +78,21 @@ export async function showMyCards(cardsSection: HTMLElement): Promise<void> {
             toaster.create("error", "Redeem code can't be display to the connected wallet.");
             return;
           }
+          console.log("Redeem Code: ", redeemCodeJson);
+
+          const redeemCodeDetails: string[] = [];
+
+          Object.keys(redeemCodeJson[0]).forEach((key: string) => {
+            const value = (redeemCodeJson[0] as unknown as Record<string, string>)[key];
+            redeemCodeDetails.push(`<p>${key}: ${value}</p>`);
+          });
 
           const redeemCodeElement = document.getElementById(`redeem-code-${transactionId}`);
           if (!redeemCodeElement) {
             console.error(`Redeem code element not found for transaction ID ${transactionId}.`);
             return;
           }
-          redeemCodeElement.innerHTML = JSON.stringify(redeemCodeJson, null, 2);
+          redeemCodeElement.innerHTML = redeemCodeDetails.join("");
         });
       });
     } else if (response.status === 401) {
