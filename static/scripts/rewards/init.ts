@@ -1,5 +1,5 @@
 import { app } from "./app-state";
-import { showCatalog } from "./gift-cards/index";
+import { addOptions, showCatalog } from "./gift-cards/index";
 import { showMyCards } from "./gift-cards/my-cards";
 import { displayCommitHash } from "./render-transaction/display-commit-hash";
 import { readClaimDataFromUrl } from "./render-transaction/read-claim-data-from-url.ts";
@@ -24,6 +24,7 @@ window.addEventListener("hashchange", () => {
 });
 
 export async function init() {
+  await addOptions();
   const cardsSection = document.getElementById("gift-cards");
   if (!cardsSection) {
     console.error("Missing gift cards section #gift-cards");
@@ -35,6 +36,6 @@ export async function init() {
   if (hash == "my-cards") {
     await showMyCards(cardsSection);
   } else {
-    await showCatalog(cardsSection, app).catch(console.error);
+    await showCatalog().catch(console.error);
   }
 }

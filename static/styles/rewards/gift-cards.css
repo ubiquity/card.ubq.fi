@@ -512,3 +512,19 @@
   border: 1px solid var(--border-color);
   margin: 4px;
 }
+#options {
+  z-index: 1;
+  display: flex;
+  flex-direction: row;
+}
+
+#options > div {
+  width: 30%;
+  max-width: 200px;
+  margin: 4px;
+}
+
+#options > div > select,
+#options > div > input {
+  width: 100%;
+}

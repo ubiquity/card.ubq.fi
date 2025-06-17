@@ -6,6 +6,9 @@ import { ProductsResponse } from "../shared/types";
 
 export const getPaginationSchema = z.object({
   page: z.string(),
+  productName: z.string().optional(),
+  countryCode: z.string(),
+  productCategoryId: z.coerce.number(),
 });
 
 export async function onRequest(ctx: Context): Promise<Response> {
@@ -16,15 +19,18 @@ export async function onRequest(ctx: Context): Promise<Response> {
     const { searchParams } = new URL(ctx.request.url);
     const result = getPaginationSchema.safeParse({
       page: searchParams.get("page"),
+      productName: searchParams.get("productName"),
+      countryCode: searchParams.get("countryCode"),
+      productCategoryId: searchParams.get("productCategoryId"),
     });
     if (!result.success) {
       throw new Error(`Invalid parameters: ${JSON.stringify(result.error.errors)}`);
     }
-    //const { page } = result.data;
+    const { productName, countryCode, productCategoryId } = result.data;
 
     const accessToken = await getAccessToken(ctx.env);
 
-    const url = `${getReloadlyApiBaseUrl(accessToken.isSandbox)}/products?includeFixed=false&productCategoryId=1`;
+    const url = `${getReloadlyApiBaseUrl(accessToken.isSandbox)}/products?includeFixed=false&productCategoryId=${productCategoryId}&countryCode=${countryCode}&productName=${productName}`;
     console.log(`Retrieving gift cards from ${url}`);
     const options = {
       method: "GET",
