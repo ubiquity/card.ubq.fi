@@ -115,7 +115,7 @@ export async function addOptions() {
 
 export function getSingleGiftCardHtml(giftCard: GiftCard): string {
   return html`
-    <a href="#/${giftCard.productId}">
+    <a href="#/sku/${giftCard.productId}">
       <div class="card-section" id="offered-card" data-product-id="${giftCard.productId}">
         <div class="card-image-container">
           <img src="${giftCard.logoUrls[0]}" alt="${giftCard.productName}" />

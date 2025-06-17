@@ -4,8 +4,7 @@ import { Context, ReloadlyFailureResponse } from "./utils/types";
 import { validateEnvVars, validateRequestMethod } from "./utils/validators";
 
 export const getGiftCardParams = z.object({
-  sku: z.string(),
-  countryCode: z.string(),
+  sku: z.coerce.number(),
 });
 
 export async function onRequest(ctx: Context): Promise<Response> {
@@ -16,7 +15,6 @@ export async function onRequest(ctx: Context): Promise<Response> {
     const { searchParams } = new URL(ctx.request.url);
     const result = getGiftCardParams.safeParse({
       sku: searchParams.get("sku"),
-      countryCode: searchParams.get("countryCode"),
     });
     if (!result.success) {
       throw new Error(`Invalid parameters: ${JSON.stringify(result.error.errors)}`);

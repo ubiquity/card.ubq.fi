@@ -5,16 +5,32 @@ import { loadedGiftCards } from "./catalog";
 import { getPendingOrder } from "./order-storage";
 import { getActivePermit } from "./utils";
 import { mint } from "./mint/mint-action";
+import { getApiBaseUrl } from "./helpers";
 
 const html = String.raw;
 
 export async function getGiftCardHtml(sku: number): Promise<string> {
-  const giftCard = loadedGiftCards.find((p) => p.productId === sku);
+  const giftCard = await getGiftCard(sku);
   if (!giftCard) {
     return "<p class='card-error'>Unable to find the gift card.</p>";
   }
 
   return await createHtml(giftCard);
+}
+
+export async function getGiftCard(sku: number): Promise<GiftCard | null> {
+  let giftCard = loadedGiftCards.find((p) => p.productId === sku);
+  if (!giftCard) {
+    const apiUrl = `${getApiBaseUrl()}/gift-card?sku=${sku}`;
+
+    const response = await fetch(apiUrl);
+
+    if (response.ok) {
+      giftCard = await response.json();
+    }
+  }
+
+  return giftCard || null;
 }
 
 async function createHtml(giftCard: GiftCard) {

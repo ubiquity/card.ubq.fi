@@ -42,7 +42,7 @@ export async function showMyCards(cardsSection: HTMLElement): Promise<void> {
                 <p><strong>Value: </strong>${transaction.product.currencyCode}${transaction.product.totalPrice.toFixed(2)}</p>
                 <p><strong>Price: </strong>${transaction.currencyCode}${transaction.amount.toFixed(2)}</p>
                 <p><strong>Transaction ID:</strong> ${transaction.transactionId}</p>
-                <p><strong>SKU:</strong><a href="/#/${transaction.product.productId}">${transaction.product.productId}</a></p>
+                <p><strong>SKU:</strong><a href="/#/sku/${transaction.product.productId}">${transaction.product.productId}</a></p>
                 <div id="redeem-code-${transaction.transactionId}" class="redeem-info">
                   <div class="card-number">
                     <p>xxxxxxxxxxxxxxxxx</p>

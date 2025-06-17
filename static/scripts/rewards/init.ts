@@ -38,7 +38,7 @@ export async function init() {
   if (hash == "my-cards") {
     await showMyCards(cardsSection);
   } else if (hash.indexOf("sku") === 0) {
-    const sku = Number(window.location.hash.replace("sku", ""));
+    const sku = Number(window.location.hash.replace("#/sku/", ""));
     const html = await getGiftCardHtml(sku);
     cardsSection.innerHTML = html;
     await addGiftCardEvents(sku);
