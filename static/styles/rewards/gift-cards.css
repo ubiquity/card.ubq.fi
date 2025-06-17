@@ -1,3 +1,6 @@
+.gift-cards-container {
+  min-height: 50vh;
+}
 .card-heading {
   font-size: 16px;
   text-align: center;
