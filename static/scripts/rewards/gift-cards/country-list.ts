@@ -1,11 +1,11 @@
 export function countryListDropdown(selected?: string) {
   const options: string[] = [`<option disabled>Select your country</option>`];
-  Object.keys(countryListJson).forEach((key) => {
-    options.push(`<option value="${key}" ${selected === key ? "selected" : ""}>${(countryListJson as Record<string, string>)[key]}</option>`);
+  Object.keys(countryList).forEach((key) => {
+    options.push(`<option value="${key}" ${selected === key ? "selected" : ""}>${countryList[key]}</option>`);
   });
   return `<select id="countries">${options.join("")}</select>`;
 }
-export const countryListJson = {
+export const countryList: Record<string, string> = {
   AF: "Afghanistan",
   AL: "Albania",
   DZ: "Algeria",

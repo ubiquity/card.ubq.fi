@@ -1,6 +1,6 @@
 import { ethers } from "ethers";
 import { GiftCard, Product } from "../../../../shared/types";
-import { countryListDropdown } from "./country-list";
+import { countryList, countryListDropdown } from "./country-list";
 import { addGiftCardEvents, getSingleGiftCardHtml, getSingleGiftCardHtmlDetailed } from "./gift-card";
 import { detectCardsEnv, getApiBaseUrl, getUserCountryCode } from "./helpers";
 import { getActivePermit } from "./utils";
@@ -72,7 +72,9 @@ function addProductsHtml(products: Product[], country: string, giftCardsSection:
       }
     });
   } else {
-    htmlParts.push(`<p class="card-error">There are no gift cards available for your location.</p>`);
+    const category = categoryElement?.selectedOptions[0]?.textContent;
+    const categoryMessage = category ? `in category ${category}` : "";
+    htmlParts.push(`<p class="card-error">No gift cards available ${categoryMessage} for ${countryList[country]}.</p>`);
   }
 
   giftCardsSection.innerHTML = htmlParts.join("");
