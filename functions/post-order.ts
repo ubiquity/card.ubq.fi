@@ -5,7 +5,7 @@ import { BigNumber } from "ethers";
 import { isGeoRestricted } from "../shared/allowed-country-list";
 import { PostOrderParams, postOrderParamsSchema } from "../shared/api-types";
 import { giftCardTreasuryAddress, permit2Address, ubiquityDollarAllowedChainIds, ubiquityDollarChainAddresses } from "../shared/constants";
-import { getMintMessageToSign } from "../shared/helpers";
+import { getGiftCardOrderId, getMintMessageToSign } from "../shared/helpers";
 import { getGiftCardValue, isClaimableForAmount } from "../shared/pricing";
 import { ExchangeRate, GiftCard } from "../shared/types";
 import { useRpcHandler } from "../shared/use-rpc-handler";
@@ -54,7 +54,7 @@ export async function onRequest(ctx: Context): Promise<Response> {
         return Response.json({ message: validationErr }, { status: 403 });
       }
 
-      orderId = `${txHash}:${retryCount}`;
+      orderId = getGiftCardOrderId(txReceipt.from, txHash, retryCount);
       amountDaiWei = txParsed.args[1];
     } else if (type === "permit") {
       const iface = new Interface(permit2Abi);
@@ -68,7 +68,7 @@ export async function onRequest(ctx: Context): Promise<Response> {
       }
 
       amountDaiWei = txParsed.args.transferDetails.requestedAmount;
-      orderId = `${txHash}:${retryCount}`;
+      orderId = getGiftCardOrderId(txReceipt.from, txHash, retryCount);
     }
 
     let exchangeRate = 1;
