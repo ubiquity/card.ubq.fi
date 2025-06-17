@@ -294,10 +294,19 @@ export type MintArgs = {
   txHash: string;
   productId: number;
   country: string;
+  retryCount: number;
 };
 
 export type PendingOrder = MintArgs & {
   price: number;
+};
+
+export type CompletedOrder = {
+  [wallet: string]: {
+    txId: number;
+    txHash: string;
+    retryCount: number;
+  }[];
 };
 
 export async function mint(giftCard: GiftCard) {
@@ -380,6 +389,7 @@ export async function mint(giftCard: GiftCard) {
       txHash: txHash,
       productId: giftCard.productId,
       country,
+      retryCount: pendingOrder && pendingOrder.retryCount ? pendingOrder.retryCount + 1 : 1,
     };
 
     await updatePendingOrder(mintArgs, price);
@@ -447,14 +457,21 @@ export async function completeOrder(giftCardId: number, txId: number) {
     const wallet = await getConnectedWallet();
     const pendingOrders = localStorage.getItem("pendingOrders");
     const pendingOrdersParsed = pendingOrders ? JSON.parse(pendingOrders) : {};
-    delete pendingOrdersParsed[wallet][giftCardId];
-    localStorage.setItem("pendingOrders", JSON.stringify(pendingOrdersParsed));
+    const currentOrder = pendingOrdersParsed[wallet]?.[giftCardId];
 
     const completedOrders = localStorage.getItem("completedOrders");
     const completedOrdersParsed = completedOrders ? JSON.parse(completedOrders) : {};
-    if (completedOrdersParsed[wallet]) completedOrdersParsed[wallet].push(txId);
-    else completedOrdersParsed[wallet] = [txId];
+    const currentCompletedOrder = {
+      txId,
+      txHash: currentOrder.txHash,
+      retryCount: currentOrder.retryCount,
+    };
+    if (completedOrdersParsed[wallet]) completedOrdersParsed[wallet].unshift(currentCompletedOrder);
+    else completedOrdersParsed[wallet] = [currentCompletedOrder];
     localStorage.setItem("completedOrders", JSON.stringify(completedOrdersParsed));
+
+    delete pendingOrdersParsed[wallet][giftCardId];
+    localStorage.setItem("pendingOrders", JSON.stringify(pendingOrdersParsed));
   } catch (error) {
     console.error(error);
   }

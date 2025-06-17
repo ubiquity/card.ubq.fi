@@ -20,6 +20,7 @@ export const postOrderParamsSchema = z.object({
   chainId: z.coerce.number(),
   country: z.string(),
   signedMessage: z.optional(z.string()),
+  retryCount: z.coerce.number(),
 });
 
 export type PostOrderParams = z.infer<typeof postOrderParamsSchema>;
