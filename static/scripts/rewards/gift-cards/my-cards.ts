@@ -1,4 +1,5 @@
 import { OrderTransaction } from "../../../../shared/types";
+import { CompletedOrder } from "./gift-card";
 import { getApiBaseUrl } from "./helpers";
 import { showRedeemCode } from "./reveal/reveal-action";
 import { getConnectedWallet } from "./utils";
@@ -9,14 +10,15 @@ export async function showMyCards(cardsSection: HTMLElement): Promise<void> {
   try {
     const wallet = await getConnectedWallet(); // Get the current user's wallet
     const completedOrdersString = localStorage.getItem("completedOrders");
-    const completedOrdersParsed: { [key: string]: number[] } = completedOrdersString ? JSON.parse(completedOrdersString) : {};
+    const completedOrdersParsed: CompletedOrder = completedOrdersString ? JSON.parse(completedOrdersString) : {};
 
-    const transactionIds = completedOrdersParsed[wallet] || [];
+    const transactions = completedOrdersParsed[wallet] || [];
 
-    if (transactionIds.length === 0) {
+    if (transactions.length === 0) {
       cardsSection.innerHTML = "<p class='card-error'>You don't own any gift cards yet. Complete an order to see your cards here.</p>";
       return;
     }
+    const transactionIds = transactions.map((transaction) => transaction.txId);
 
     // Format transaction IDs for the GET request query parameter
     // Assuming the API expects a comma-separated list, e.g., /my-cards?transactionIds=1,2,3
