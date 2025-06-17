@@ -4,6 +4,7 @@ import { countryListDropdown } from "./country-list";
 import { addGiftCardEvents, getSingleGiftCardHtml, getSingleGiftCardHtmlDetailed } from "./gift-card";
 import { detectCardsEnv, getApiBaseUrl, getUserCountryCode } from "./helpers";
 import { getActivePermit } from "./utils";
+import { hideLoader, showLoader } from "../../shared/loader";
 
 let loadedProducts: Product[] = [];
 let searchElement: HTMLInputElement;
@@ -121,8 +122,9 @@ export async function addOptions() {
 
   [searchElement, countryElement, categoryElement].forEach((element) => {
     element.addEventListener("change", () => {
+      showLoader();
       loadedProducts = [];
-      showCatalog().catch(console.error);
+      showCatalog().then(hideLoader).catch(console.error);
     });
   });
 }

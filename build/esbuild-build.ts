@@ -8,6 +8,7 @@ const cssFiles: string[] = [
   "static/styles/rewards/pay.css",
   "static/styles/rewards/background.css",
   "static/styles/toast.css",
+  "static/styles/loader.css",
   "static/styles/rewards/claim-table.css",
   "static/styles/rewards/gift-cards.css",
   "static/styles/rewards/ubiquity-dollar.css",

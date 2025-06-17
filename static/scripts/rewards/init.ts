@@ -1,3 +1,4 @@
+import { hideLoader } from "../shared/loader";
 import { app } from "./app-state";
 import { addOptions, showCatalog } from "./gift-cards/index";
 import { showMyCards } from "./gift-cards/my-cards";
@@ -38,4 +39,5 @@ export async function init() {
   } else {
     await showCatalog().catch(console.error);
   }
+  hideLoader();
 }
