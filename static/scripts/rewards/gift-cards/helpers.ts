@@ -1,4 +1,5 @@
 import ct from "countries-and-timezones";
+import { FALLBACK_USER_LOCATION } from "../../shared/constants";
 
 declare const BACKEND_URL: string;
 
@@ -26,7 +27,7 @@ async function getCountryCodeByTimezone() {
   return countries[0]?.id;
 }
 
-export async function getUserCountryCode() {
+export async function getUserCountryCode(): Promise<string> {
   const methods = [getCountryCodeByIp, getCountryCodeByTimezone];
   for (let i = 0; i < methods.length; ++i) {
     const countryCode = await methods[i]();
@@ -34,7 +35,7 @@ export async function getUserCountryCode() {
       return countryCode;
     }
   }
-  return null;
+  return FALLBACK_USER_LOCATION;
 }
 
 export async function isReloadlySandbox() {
