@@ -51,16 +51,6 @@ export class AppState {
 
     return getNetworkExplorer(networkId)[0].url;
   }
-
-  nextPermit(): PermitReward | null {
-    this._currentIndex = Math.min(this.claims.length - 1, this.rewardIndex + 1);
-    return this.reward;
-  }
-
-  previousPermit(): PermitReward | null {
-    this._currentIndex = Math.max(0, this._currentIndex - 1);
-    return this.reward;
-  }
 }
 
 export const app = new AppState();
