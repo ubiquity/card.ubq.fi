@@ -34,16 +34,17 @@ export async function showCatalog() {
     }
   }
 
-  const countryCode = await getUserCountryCode();
-
   if (loadedProducts.length === 0) {
     void detectCardsEnv();
+    const userCountryCode = countryElement?.value || (await getUserCountryCode());
+    loadedProducts = await loadProducts(userCountryCode);
 
-    if (!countryCode) {
-      catalogElement.innerHTML = `<p class="card-error">Failed to load suitable virtual cards for you. Refresh or try disabling adblocker.</p>`;
+    if (loadedProducts.length === 0) {
+      const category = categoryElement?.selectedOptions[0]?.textContent;
+      const categoryMessage = category ? `in category ${category}` : "";
+      catalogElement.innerHTML = `<p class="card-error">No gift cards available ${categoryMessage} for ${countryList[userCountryCode]}.</p>`;
       return;
     }
-    loadedProducts = await loadProducts(countryCode);
   }
 
   const productSku = Number(window.location.hash.replace("#/", ""));
@@ -59,33 +60,26 @@ export async function showCatalog() {
     return;
   }
 
-  addProductsHtml(loadedProducts, countryCode, catalogElement);
+  addProductsHtml(loadedProducts, catalogElement);
 }
 
-function addProductsHtml(products: Product[], country: string, giftCardsSection: HTMLElement) {
+function addProductsHtml(products: Product[], giftCardsSection: HTMLElement) {
   const htmlParts: string[] = [];
 
-  if (products.length > 0) {
-    products.forEach((product: Product) => {
-      if (product.status === "ACTIVE") {
-        htmlParts.push(getSingleGiftCardHtml(product));
-      }
-    });
-  } else {
-    const category = categoryElement?.selectedOptions[0]?.textContent;
-    const categoryMessage = category ? `in category ${category}` : "";
-    htmlParts.push(`<p class="card-error">No gift cards available ${categoryMessage} for ${countryList[country]}.</p>`);
-  }
+  products.forEach((product: Product) => {
+    if (product.status === "ACTIVE") {
+      htmlParts.push(getSingleGiftCardHtml(product));
+    }
+  });
 
   giftCardsSection.innerHTML = htmlParts.join("");
 }
 
 export async function loadProducts(countryCode: string) {
   const search = searchElement?.value || "";
-  const country = countryElement?.value || countryCode;
   const category = categoryElement?.value || 1;
 
-  const retrieveProductsUrl = `${getApiBaseUrl()}/bootstrap?page=1&countryCode=${country}&productCategoryId=${category}&productName=${search}`;
+  const retrieveProductsUrl = `${getApiBaseUrl()}/bootstrap?page=1&countryCode=${countryCode}&productCategoryId=${category}&productName=${search}`;
   const productsResponse = await fetch(retrieveProductsUrl, requestInit);
 
   if (productsResponse.status == 200) {
