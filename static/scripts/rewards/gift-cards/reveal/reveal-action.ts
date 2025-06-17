@@ -2,6 +2,7 @@ import { getRevealMessageToSign } from "../../../../../shared/helpers";
 import { RedeemCode, OrderTransaction } from "../../../../../shared/types";
 import { app, AppState } from "../../app-state";
 import { toaster } from "../../toaster";
+import { CompletedOrder } from "../gift-card";
 import { getApiBaseUrl } from "../helpers";
 
 export function attachRevealAction(transaction: OrderTransaction, app: AppState) {
@@ -58,18 +59,12 @@ async function revealRedeemCode(transactionId: number, signedMessage: string, ap
   }
 }
 
-export async function showRedeemCode(transactionId: number) {
-  let signedMessage;
-  if (app?.signer) {
-    try {
-      signedMessage = await app.signer.signMessage(getRevealMessageToSign(Number(transactionId)));
-      await revealRedeemCode(transactionId, signedMessage, app);
-    } catch (error) {
-      toaster.create("error", "You did not sign the message to reveal redeem code.");
-    }
-  } else {
+export async function getRedeemCode(order: CompletedOrder) {
+  if (!app?.signer) {
     toaster.create("error", "Connect your wallet to reveal the redeem code.");
+    return;
   }
+  const signedMessage = await app.signer.signMessage(getRevealMessageToSign(order));
 
   const requestInit = {
     method: "GET",
@@ -79,12 +74,12 @@ export async function showRedeemCode(transactionId: number) {
   };
 
   const response = await fetch(
-    `${getApiBaseUrl()}/get-redeem-code?transactionId=${transactionId}&signedMessage=${signedMessage}&wallet=${await app.signer?.getAddress()}`,
+    `${getApiBaseUrl()}/get-redeem-code?txId=${order.txId}&txHash=${order.txHash}&retryCount=${order.retryCount}&signedMessage=${signedMessage}&wallet=${await app.signer?.getAddress()}`,
     requestInit
   );
 
   if (response.status != 200) {
-    toaster.create("error", `Redeem code can't be revealed to the connected wallet.`);
+    console.error(`Redeem code can't be revealed to the connected wallet.`);
     return;
   }
 

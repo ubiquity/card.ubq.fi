@@ -1,6 +1,6 @@
 import { verifyMessage } from "@ethersproject/wallet";
 import { getRedeemCodeParamsSchema } from "../shared/api-types";
-import { getRevealMessageToSign } from "../shared/helpers";
+import { getGiftCardOrderId, getRevealMessageToSign } from "../shared/helpers";
 import { RedeemCode } from "../shared/types";
 import { fetchIndividualTransactions } from "./my-cards";
 import { commonHeaders, getAccessToken, getReloadlyApiBaseUrl } from "./utils/shared";
@@ -17,39 +17,51 @@ export async function onRequest(ctx: Context): Promise<Response> {
     const { searchParams } = new URL(ctx.request.url);
 
     const result = getRedeemCodeParamsSchema.safeParse({
-      transactionId: searchParams.get("transactionId"),
+      txId: searchParams.get("txId"),
       signedMessage: searchParams.get("signedMessage"),
       wallet: searchParams.get("wallet"),
+      txHash: searchParams.get("txHash"),
+      retryCount: searchParams.get("retryCount"),
     });
     if (!result.success) {
       throw new Error(`Invalid parameters: ${JSON.stringify(result.error.errors)}`);
     }
-    const { transactionId, signedMessage, wallet } = result.data;
+    const { txId, signedMessage, wallet, txHash, retryCount } = result.data;
 
     const errorResponse = Response.json({ message: "Given details are not valid to redeem code." }, { status: 403 });
 
-    if (verifyMessage(getRevealMessageToSign(transactionId), signedMessage) != wallet) {
+    if (verifyMessage(getRevealMessageToSign({ txId, txHash, retryCount }), signedMessage) != wallet) {
       console.error(
         `Signed message verification failed: ${JSON.stringify({
           signedMessage,
-          transactionId,
+          txId,
+          txHash,
+          retryCount,
         })}`
       );
       return errorResponse;
     }
 
-    const transactions = await fetchIndividualTransactions([transactionId], accessToken);
+    const transactions = await fetchIndividualTransactions([txId], accessToken);
     if (transactions.failedFetches.length > 0) {
       console.error(`Failed to fetch transaction details: ${JSON.stringify(transactions.failedFetches)}`);
       return errorResponse;
     }
     const transaction = transactions.foundTransactions[0];
-    if (transaction.customIdentifier.toLowerCase().indexOf(wallet.toLowerCase()) !== 0) {
-      console.error(`Transaction does not belong to the connected wallet: ${JSON.stringify({ transaction, wallet })}`);
+    if (transaction.customIdentifier !== getGiftCardOrderId(wallet, txHash, retryCount)) {
+      console.error(
+        `Order details couldn't pass integrity check. Make sure given info is correct.: ${JSON.stringify({
+          wallet,
+          txHash,
+          retryCount,
+          customIdentifier: transaction.customIdentifier,
+          customIdentifierCreated: getGiftCardOrderId(wallet, txHash, retryCount),
+        })}`
+      );
       return errorResponse;
     }
 
-    const redeemCode = await getRedeemCode(transactionId, accessToken);
+    const redeemCode = await getRedeemCode(txId, accessToken);
     return Response.json(redeemCode, { status: 200 });
   } catch (error) {
     console.error("There was an error while processing your request.", error);

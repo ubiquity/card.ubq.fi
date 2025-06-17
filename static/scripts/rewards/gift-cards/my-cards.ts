@@ -1,18 +1,14 @@
 import { OrderTransaction } from "../../../../shared/types";
-import { CompletedOrder } from "./gift-card";
+import { toaster } from "../toaster";
+import { getCompletedOrders } from "./gift-card";
 import { getApiBaseUrl } from "./helpers";
-import { showRedeemCode } from "./reveal/reveal-action";
-import { getConnectedWallet } from "./utils";
+import { getRedeemCode } from "./reveal/reveal-action";
 
 export async function showMyCards(cardsSection: HTMLElement): Promise<void> {
   cardsSection.innerHTML = "<p class='card-error'>Loading your gift cards...</p>";
 
   try {
-    const wallet = await getConnectedWallet(); // Get the current user's wallet
-    const completedOrdersString = localStorage.getItem("completedOrders");
-    const completedOrdersParsed: CompletedOrder = completedOrdersString ? JSON.parse(completedOrdersString) : {};
-
-    const transactions = completedOrdersParsed[wallet] || [];
+    const transactions = await getCompletedOrders();
 
     if (transactions.length === 0) {
       cardsSection.innerHTML = "<p class='card-error'>You don't own any gift cards yet. Complete an order to see your cards here.</p>";
@@ -71,7 +67,17 @@ export async function showMyCards(cardsSection: HTMLElement): Promise<void> {
             return;
           }
 
-          const redeemCodeJson = await showRedeemCode(Number(transactionId));
+          const completedOrders = await getCompletedOrders();
+          const order = completedOrders.find((order) => order.txId === Number(transactionId));
+          if (!order) {
+            toaster.create("error", `Transaction with ID ${transactionId} not found.`);
+            return;
+          }
+          const redeemCodeJson = await getRedeemCode(order);
+          if (!redeemCodeJson) {
+            toaster.create("error", "Redeem code can't be display to the connected wallet.");
+            return;
+          }
 
           const redeemCodeElement = document.getElementById(`redeem-code-${transactionId}`);
           if (!redeemCodeElement) {

@@ -302,11 +302,9 @@ export type PendingOrder = MintArgs & {
 };
 
 export type CompletedOrder = {
-  [wallet: string]: {
-    txId: number;
-    txHash: string;
-    retryCount: number;
-  }[];
+  txId: number;
+  txHash: string;
+  retryCount: number;
 };
 
 export async function mint(giftCard: GiftCard) {
@@ -475,4 +473,11 @@ export async function completeOrder(giftCardId: number, txId: number) {
   } catch (error) {
     console.error(error);
   }
+}
+
+export async function getCompletedOrders() {
+  const wallet = await getConnectedWallet(); // Get the current user's wallet
+  const completedOrdersString = localStorage.getItem("completedOrders");
+  const completedOrdersParsed = completedOrdersString ? JSON.parse(completedOrdersString) : {};
+  return completedOrdersParsed[wallet] as CompletedOrder[] | [];
 }
