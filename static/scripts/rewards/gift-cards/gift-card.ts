@@ -9,17 +9,20 @@ import { getApiBaseUrl } from "./helpers";
 
 const html = String.raw;
 
+let giftCard: GiftCard;
+
 export async function getGiftCardHtml(sku: number): Promise<string> {
-  const giftCard = await getGiftCard(sku);
-  if (!giftCard) {
+  const selectedGiftCard = await selectGiftCard(sku);
+  if (!selectedGiftCard) {
     return "<p class='card-error'>Unable to find the gift card.</p>";
   }
 
-  return await createHtml(giftCard);
+  return await createHtml(selectedGiftCard);
 }
 
-export async function getGiftCard(sku: number): Promise<GiftCard | null> {
-  let giftCard = loadedGiftCards.find((p) => p.productId === sku);
+export async function selectGiftCard(sku: number): Promise<GiftCard | null> {
+  giftCard = giftCard || loadedGiftCards.find((p) => p.productId === sku);
+
   if (!giftCard) {
     const apiUrl = `${getApiBaseUrl()}/gift-card?sku=${sku}`;
 
@@ -82,7 +85,7 @@ async function createHtml(giftCard: GiftCard) {
 }
 
 export async function addGiftCardEvents(sku: number) {
-  const giftCard = loadedGiftCards.find((p) => p.productId === sku);
+  const giftCard = await selectGiftCard(sku);
   if (!giftCard) {
     return;
   }
