@@ -1,8 +1,9 @@
 import { OrderTransaction } from "../../../../shared/types";
 import { toaster } from "../toaster";
-import { getCompletedOrders } from "./gift-card";
 import { getApiBaseUrl } from "./helpers";
+import { getCompletedOrders } from "./order-storage";
 import { getRedeemCode } from "./reveal/reveal-action";
+import { CompletedOrder } from "./types";
 
 export async function showMyCards(cardsSection: HTMLElement): Promise<void> {
   cardsSection.innerHTML = "<p class='card-error'>Loading your gift cards...</p>";
@@ -68,7 +69,7 @@ export async function showMyCards(cardsSection: HTMLElement): Promise<void> {
           }
 
           const completedOrders = await getCompletedOrders();
-          const order = completedOrders.find((order) => order.txId === Number(transactionId));
+          const order = completedOrders.find((order: CompletedOrder) => order.txId === Number(transactionId));
           if (!order) {
             toaster.create("error", `Transaction with ID ${transactionId} not found.`);
             return;

@@ -1,6 +1,7 @@
 import { hideLoader } from "../shared/loader";
 import { app } from "./app-state";
-import { addOptions, showCatalog } from "./gift-cards/index";
+import { addOptions, showCatalog } from "./gift-cards/catalog";
+import { addGiftCardEvents, getGiftCardHtml } from "./gift-cards/gift-card";
 import { showMyCards } from "./gift-cards/my-cards";
 import { displayCommitHash } from "./render-transaction/display-commit-hash";
 import { readClaimDataFromUrl } from "./render-transaction/read-claim-data-from-url.ts";
@@ -36,6 +37,11 @@ export async function init() {
   const hash = window.location.hash.replace("#/", "");
   if (hash == "my-cards") {
     await showMyCards(cardsSection);
+  } else if (hash.indexOf("sku") === 0) {
+    const sku = Number(window.location.hash.replace("sku", ""));
+    const html = await getGiftCardHtml(sku);
+    cardsSection.innerHTML = html;
+    await addGiftCardEvents(sku);
   } else {
     await showCatalog().catch(console.error);
   }

@@ -1,12 +1,13 @@
 import { ethers } from "ethers";
-import { GiftCard, Product } from "../../../../shared/types";
+import { GiftCard } from "../../../../shared/types";
+import { hideLoader, showLoader } from "../../shared/loader";
 import { countryList, countryListDropdown } from "./country-list";
-import { addGiftCardEvents, getSingleGiftCardHtml, getSingleGiftCardHtmlDetailed } from "./gift-card";
 import { detectCardsEnv, getApiBaseUrl, getUserCountryCode } from "./helpers";
 import { getActivePermit } from "./utils";
-import { hideLoader, showLoader } from "../../shared/loader";
 
-let loadedProducts: Product[] = [];
+const html = String.raw;
+
+export let loadedGiftCards: GiftCard[] = [];
 let searchElement: HTMLInputElement;
 let countryElement: HTMLSelectElement;
 let categoryElement: HTMLSelectElement;
@@ -34,12 +35,12 @@ export async function showCatalog() {
     }
   }
 
-  if (loadedProducts.length === 0) {
+  if (loadedGiftCards.length === 0) {
     void detectCardsEnv();
     const userCountryCode = countryElement?.value || (await getUserCountryCode());
-    loadedProducts = await loadProducts(userCountryCode);
+    loadedGiftCards = await loadGiftCards(userCountryCode);
 
-    if (loadedProducts.length === 0) {
+    if (loadedGiftCards.length === 0) {
       const category = categoryElement?.selectedOptions[0]?.textContent;
       const categoryMessage = category ? `in category ${category}` : "";
       catalogElement.innerHTML = `<p class="card-error">No gift cards available ${categoryMessage} for ${countryList[userCountryCode]}.</p>`;
@@ -47,35 +48,22 @@ export async function showCatalog() {
     }
   }
 
-  const productSku = Number(window.location.hash.replace("#/", ""));
-  if (productSku) {
-    const product = loadedProducts.find((p) => p.productId === productSku);
-    if (product) {
-      console.log("product", product);
-      catalogElement.innerHTML = await getSingleGiftCardHtmlDetailed(product);
-      await addGiftCardEvents(product as GiftCard);
-    } else {
-      catalogElement.innerHTML = "<p class='card-error'>Unable to find a gift card.</p>";
-    }
-    return;
-  }
-
-  addProductsHtml(loadedProducts, catalogElement);
+  addProductsHtml(loadedGiftCards, catalogElement);
 }
 
-function addProductsHtml(products: Product[], giftCardsSection: HTMLElement) {
+function addProductsHtml(giftCards: GiftCard[], giftCardsSection: HTMLElement) {
   const htmlParts: string[] = [];
 
-  products.forEach((product: Product) => {
-    if (product.status === "ACTIVE") {
-      htmlParts.push(getSingleGiftCardHtml(product));
+  giftCards.forEach((giftCard: GiftCard) => {
+    if (giftCard.status === "ACTIVE") {
+      htmlParts.push(getSingleGiftCardHtml(giftCard));
     }
   });
 
   giftCardsSection.innerHTML = htmlParts.join("");
 }
 
-export async function loadProducts(countryCode: string) {
+export async function loadGiftCards(countryCode: string) {
   const search = searchElement?.value || "";
   const category = categoryElement?.value || 1;
 
@@ -83,7 +71,7 @@ export async function loadProducts(countryCode: string) {
   const productsResponse = await fetch(retrieveProductsUrl, requestInit);
 
   if (productsResponse.status == 200) {
-    return (await productsResponse.json()).products as Product[];
+    return (await productsResponse.json()).products as GiftCard[];
   }
   return [];
 }
@@ -119,8 +107,53 @@ export async function addOptions() {
   [searchElement, countryElement, categoryElement].forEach((element) => {
     element.addEventListener("change", () => {
       showLoader();
-      loadedProducts = [];
+      loadedGiftCards = [];
       showCatalog().then(hideLoader).catch(console.error);
     });
   });
+}
+
+export function getSingleGiftCardHtml(giftCard: GiftCard): string {
+  return html`
+    <a href="#/${giftCard.productId}">
+      <div class="card-section" id="offered-card" data-product-id="${giftCard.productId}">
+        <div class="card-image-container">
+          <img src="${giftCard.logoUrls[0]}" alt="${giftCard.productName}" />
+        </div>
+        <div class="details">
+          <h3>${giftCard.productName}</h3>
+          <div class="pricing">
+            <div class="available">
+              ${giftCard.denominationType === "FIXED"
+                ? html`
+                    <div class="fixed-denominations">
+                      ${giftCard.fixedRecipientDenominations
+                        .map(
+                          (amount: number) => html`
+                            <div class="amount-option">
+                              <span class="currency">${giftCard.recipientCurrencyCode}</span>
+                              <span class="amount">${amount}</span>
+                            </div>
+                          `
+                        )
+                        .join("")}
+                    </div>
+                  `
+                : html`
+                    <div class="range-denominations">
+                      <div class="amount-range">
+                        <span class="currency">${giftCard.recipientCurrencyCode}</span>
+                        <span class="amount">${giftCard.minRecipientDenomination}</span>
+                        -
+                        <span class="currency">${giftCard.recipientCurrencyCode}</span>
+                        <span class="amount">${giftCard.maxRecipientDenomination}</span>
+                      </div>
+                    </div>
+                  `}
+            </div>
+          </div>
+        </div>
+      </div>
+    </a>
+  `;
 }

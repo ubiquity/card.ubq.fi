@@ -1,7 +1,7 @@
 import { BigNumberish, ethers } from "ethers";
 import { isRangePriceGiftCardClaimable } from "./pricing";
 import { GiftCard } from "./types";
-import { CompletedOrder } from "../static/scripts/rewards/gift-cards/gift-card";
+import { CompletedOrder } from "../static/scripts/rewards/gift-cards/types";
 
 export function getGiftCardOrderId(wallet: string, txHash: string, retryCount: number) {
   const checksumAddress = ethers.utils.getAddress(wallet);

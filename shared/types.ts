@@ -1,38 +1,3 @@
-export interface GiftCard {
-  productId: number;
-  productName: string;
-  global: boolean;
-  supportsPreOrder: boolean;
-  senderFee: number;
-  senderFeePercentage: number;
-  discountPercentage: number;
-  denominationType: "FIXED" | "RANGE";
-  recipientCurrencyCode: string;
-  minRecipientDenomination: number;
-  maxRecipientDenomination: number;
-  senderCurrencyCode: string;
-  minSenderDenomination: number;
-  maxSenderDenomination: number;
-  fixedRecipientDenominations: number[];
-  fixedSenderDenominations: number[];
-  fixedRecipientToSenderDenominationsMap: ValueToPriceMap;
-  metadata?: object;
-  logoUrls: string[];
-  brand: {
-    brandId: number;
-    brandName: string;
-  };
-  country: {
-    isoName: string;
-    name: string;
-    flagUrl: string;
-  };
-  redeemInstruction: {
-    concise: string;
-    verbose: string;
-  };
-}
-
 export interface OrderedProduct {
   productId: number;
   productName: string;
@@ -99,10 +64,10 @@ export interface ValueToPriceMap {
 }
 
 export interface ProductsResponse {
-  content: Product[];
+  content: GiftCard[];
 }
 
-export interface Product {
+export interface GiftCard {
   productId: number;
   productName: string;
   global: boolean;
