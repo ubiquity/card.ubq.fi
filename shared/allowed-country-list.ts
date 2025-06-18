@@ -1,10 +1,10 @@
-export type CountryListType = {
+export type InternationalPaymentCardsList = {
   [productId: number]: {
     blockList: string[]; // 2 letter List of countries that are blocked from minting
     allowList: string[];
   };
 };
-export const countryList: CountryListType = {
+export const intlPaymentCardsList: InternationalPaymentCardsList = {
   20307: {
     blockList: ["CF", "CD", "ER", "ET", "LY", "ML", "SO", "SS", "SD", "ZW", "CU", "NI", "VE", "AF", "MM", "KP", "SY", "YE", "AL", "BY", "RU", "UA", "FJ"],
     allowList: [
@@ -364,7 +364,7 @@ export const countryList: CountryListType = {
 };
 
 export function isGeoRestricted(productId: number, countryCode: string): boolean {
-  const product = countryList[productId];
+  const product = intlPaymentCardsList[productId];
 
   // If product doesn't exist, it's not geo-restricted (returns false).
   // Otherwise, it's geo-restricted if it's in the blockList

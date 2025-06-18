@@ -63,7 +63,7 @@ export interface ValueToPriceMap {
   [key: string]: number;
 }
 
-export interface ProductsResponse {
+export interface GiftCardsResponse {
   content: GiftCard[];
 }
 
