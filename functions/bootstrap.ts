@@ -1,15 +1,12 @@
 import { z } from "zod";
-import { commonHeaders, getAccessToken, getReloadlyApiBaseUrl } from "./utils/shared";
-import { AccessToken, Context, ReloadlyFailureResponse } from "./utils/types";
-import { validateEnvVars, validateRequestMethod } from "./utils/validators";
 import { GiftCard, GiftCardsResponse } from "../shared/types";
-import { intlPaymentCardsList, isGeoRestricted } from "../shared/allowed-country-list";
+import { commonHeaders, getAccessToken, getReloadlyApiBaseUrl } from "./utils/shared";
+import { AccessToken, Context, OpenRouterCardPromptResponse, ReloadlyFailureResponse } from "./utils/types";
+import { validateEnvVars, validateRequestMethod } from "./utils/validators";
 
 export const getPaginationSchema = z.object({
-  page: z.string(),
-  productName: z.string().optional(),
   countryCode: z.string(),
-  productCategoryId: z.coerce.number(),
+  amount: z.coerce.number(),
 });
 
 export async function onRequest(ctx: Context): Promise<Response> {
@@ -19,47 +16,33 @@ export async function onRequest(ctx: Context): Promise<Response> {
 
     const { searchParams } = new URL(ctx.request.url);
     const result = getPaginationSchema.safeParse({
-      page: searchParams.get("page"),
-      productName: searchParams.get("productName"),
       countryCode: searchParams.get("countryCode"),
-      productCategoryId: searchParams.get("productCategoryId"),
+      amount: searchParams.get("amount"),
     });
     if (!result.success) {
       throw new Error(`Invalid parameters: ${JSON.stringify(result.error.errors)}`);
     }
-    const { productName, countryCode, productCategoryId } = result.data;
+    const { countryCode, amount } = result.data;
     const accessToken = await getAccessToken(ctx.env);
 
-    const giftCardsResponse = await getCards(accessToken, productCategoryId, countryCode, productName);
-    const cards = (giftCardsResponse as GiftCardsResponse).content;
+    const suitableCard = await getSuitableCard(accessToken, countryCode, amount);
 
-    //load international cards for non US countries
-    let intlCards: GiftCard[] = [];
-    if (countryCode != "US" && productCategoryId == 1) {
-      const usCardsResponse = await getCards(accessToken, 1, "US", productName);
-      const usCards = (usCardsResponse as GiftCardsResponse).content;
-      const intlCardsIds = Object.keys(intlPaymentCardsList);
-      intlCards = usCards.filter((usCard) => {
-        return intlCardsIds.includes(usCard.productId.toString()) && !isGeoRestricted(usCard.productId, countryCode);
-      });
+    if (suitableCard) {
+      return Response.json({ card: suitableCard }, { status: 200 });
     }
 
-    const availableCards = mergeGiftCardArrays(cards, intlCards);
-    console.log("availableCards", availableCards);
-
-    if (giftCardsResponse) {
-      return Response.json({ products: availableCards }, { status: 200 });
-    }
-    return Response.json({ message: "There are no gift cards available." }, { status: 404 });
+    return Response.json({ message: "No suitable payment card is available for the user." }, { status: 404 });
   } catch (error) {
     console.error("There was an error while processing your request.", error);
     return Response.json({ message: "There was an error while processing your request." }, { status: 500 });
   }
 }
 
-export async function getCards(accessToken: AccessToken, productCategoryId: number, countryCode: string, productName: string) {
-  const url = `${getReloadlyApiBaseUrl(accessToken.isSandbox)}/products?includeFixed=false&productCategoryId=${productCategoryId}&countryCode=${countryCode}&productName=${productName}`;
-  console.log(`Retrieving gift cards from ${url}`);
+export async function getSuitableCard(accessToken: AccessToken, countryCode: string, amount: number): Promise<GiftCard | null> {
+  const mastercardUrl = `${getReloadlyApiBaseUrl(accessToken.isSandbox)}/products?includeFixed=false&productCategoryId=1&productName=mastercard`;
+  const visaUrl = `${getReloadlyApiBaseUrl(accessToken.isSandbox)}/products?includeFixed=false&productCategoryId=1&productName=visa`;
+
+  console.log(`Retrieving from ${{ mastercardUrl: mastercardUrl, visaUrl: visaUrl }}`);
   const options = {
     method: "GET",
     headers: {
@@ -68,37 +51,73 @@ export async function getCards(accessToken: AccessToken, productCategoryId: numb
     },
   };
 
-  const response = await fetch(url, options);
-  const responseJson = await response.json();
+  const [mastercardResponse, visaResponse] = await Promise.all([fetch(mastercardUrl, options), fetch(visaUrl, options)]);
+  const [mastercardJson, visaJson] = await Promise.all([mastercardResponse.json(), visaResponse.json()]);
 
-  if (response.status != 200) {
+  if (mastercardResponse.status != 200) {
     throw new Error(
-      `Error from Reloadly API: ${JSON.stringify({
-        status: response.status,
-        message: (responseJson as ReloadlyFailureResponse).message,
+      `Error from Reloadly API for mastercard: ${JSON.stringify({
+        status: mastercardResponse.status,
+        message: (mastercardJson as ReloadlyFailureResponse).message,
       })}`
     );
   }
-  console.log("response.status", response.status);
-  console.log(`Response from ${url}`, responseJson);
-  console.log("length", (responseJson as GiftCardsResponse).content.length);
-  return responseJson;
-}
 
-function mergeGiftCardArrays(cards: GiftCard[], intlCards: GiftCard[]): GiftCard[] {
-  // Create a Set to store productIds from the 'cards' array for efficient lookup
-  const cardProductIds = new Set<number>();
-  cards.forEach((card) => cardProductIds.add(card.productId));
+  if (visaResponse.status != 200) {
+    throw new Error(
+      `Error from Reloadly API for mastercard: ${JSON.stringify({
+        status: visaResponse.status,
+        message: (visaJson as ReloadlyFailureResponse).message,
+      })}`
+    );
+  }
 
-  // Start with all items from the 'cards' array
-  const mergedCards: GiftCard[] = [...cards];
+  console.log("mastercardResponse.status", mastercardResponse.status);
+  console.log(`Response from ${mastercardUrl}`, mastercardJson);
+  console.log("visaResponse.status", visaResponse.status);
+  console.log(`Response from ${visaUrl}`, visaJson);
 
-  // Iterate through intlCards and add only those not present in 'cards'
-  intlCards.forEach((intlCard) => {
-    if (!cardProductIds.has(intlCard.productId)) {
-      mergedCards.push(intlCard);
-    }
+  const masterCards = (mastercardJson as GiftCardsResponse).content;
+  const visaCards = (visaJson as GiftCardsResponse).content;
+
+  const allCards = masterCards.concat(visaCards);
+
+  const prompt = `Find a list of suitable payment cards offered by Reloadly (reloadly.com) from the JSON stringified array given below. It contains details about the card, pricing, information about its supported locations and other info. Pick one mastercard or visa card for a User from ISO 3166-1 alpha-2 country code ${countryCode}. The card must be allowed to be issued to their country and should be usable there. It must have status as ACTIVE. The exact amount they are going to pay is exactly ${amount} USD, not more or not less. Make sure the card is also available in this price range after checking all fees and discounts. Prefer tokenized card over non-tokenized card. Ignore all other cards that are not visa or mastercard.\nMust reply with an array [] that contains only the product IDs. Put the most suitable card first, and next suitable after that. If there is no suitable card for the user, just reply with an empty array. Do not write anything extra in the response.\n${JSON.stringify(allCards)}`;
+
+  const aiResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: "Bearer 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",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "deepseek/deepseek-r1:free",
+      messages: [
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+    }),
   });
 
-  return mergedCards;
+  if (!aiResponse.ok) {
+    throw new Error(
+      `Error from OpenRouterAI API: ${JSON.stringify({
+        status: aiResponse.status,
+        message: await aiResponse.json(),
+      })}`
+    );
+  }
+
+  const aiResponseJson = (await aiResponse.json()) as OpenRouterCardPromptResponse;
+  console.log("aiResponseJson:", aiResponseJson);
+  const suitableCards = await JSON.parse(aiResponseJson.choices[0].message.content);
+  console.log("suitableCards:", suitableCards);
+
+  if (suitableCards.length) {
+    return allCards.find((card) => card.productId == suitableCards[0]);
+  }
+
+  return null;
 }
