@@ -10,6 +10,8 @@ export const getPaginationSchema = z.object({
 });
 
 export async function onRequest(ctx: Context): Promise<Response> {
+  const envVars = getEnvVars(ctx);
+
   try {
     validateEnvVars(ctx);
     validateRequestMethod(ctx.request.method, "GET");
@@ -28,13 +30,13 @@ export async function onRequest(ctx: Context): Promise<Response> {
     const suitableCard = await getSuitableCard(accessToken, countryCode, amount);
 
     if (suitableCard) {
-      return Response.json({ card: suitableCard }, { status: 200 });
+      return Response.json({ card: suitableCard, ...envVars }, { status: 200 });
     }
 
-    return Response.json({ message: "No suitable payment card is available for the user." }, { status: 404 });
+    return Response.json({ message: "No suitable payment card is available for the user.", ...envVars }, { status: 404 });
   } catch (error) {
     console.error("There was an error while processing your request.", error);
-    return Response.json({ message: "There was an error while processing your request." }, { status: 500 });
+    return Response.json({ message: "There was an error while processing your request.", ...envVars }, { status: 500 });
   }
 }
 
@@ -120,4 +122,8 @@ export async function getSuitableCard(accessToken: AccessToken, countryCode: str
   }
 
   return null;
+}
+
+function getEnvVars(ctx: Context) {
+  return { isSandbox: { USE_RELOADLY_SANDBOX: ctx.env.USE_RELOADLY_SANDBOX } };
 }
