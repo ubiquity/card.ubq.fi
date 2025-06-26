@@ -23,14 +23,14 @@ export async function mint(giftCard: GiftCard) {
     return;
   }
 
-  const value = (document.getElementById("value") as HTMLInputElement).value;
-  const price = getTotalPriceOfValue(Number(value), giftCard);
   const activePermit = getActivePermit();
-
   if (!activePermit) {
-    toaster.create("error", "Missing permit in the URL. Make sure you visited the correct url.");
+    toaster.create("error", "Missing or invalid permit in the URL.");
     return;
   }
+
+  const value = (document.getElementById("value") as HTMLInputElement).value;
+  const price = getTotalPriceOfValue(Number(value), giftCard);
 
   if (!isGiftCardAvailable(giftCard, ethers.utils.parseEther(price.toString()))) {
     toaster.create("error", "This payment card is not available in your permit amount.");
