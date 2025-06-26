@@ -6,6 +6,7 @@ import { GiftCard } from "../../../shared/types";
 import { getApiBaseUrl, getUserCountryCode, requestInit } from "./utils";
 import { mint } from "../rewards/gift-cards/mint/mint-action";
 import { dummyCard } from "./dummy-card";
+import { detectCardsEnv } from "../rewards/gift-cards/helpers";
 
 const html = String.raw;
 
@@ -50,9 +51,14 @@ export async function presentPaymentCard(contentElement: HTMLElement) {
 async function loadCards() {
   const retrieveCardsUrl = `${getApiBaseUrl()}/bootstrap`;
   const cardsResponse = await fetch(retrieveCardsUrl, requestInit);
+  const responseJson = await cardsResponse.json();
+
+  if (responseJson.isSandbox) {
+    detectCardsEnv(responseJson.isSandbox).catch(console.error);
+  }
 
   if (cardsResponse.status == 200) {
-    return (await cardsResponse.json()).cards as GiftCard[];
+    return responseJson.cards as GiftCard[];
   }
   return [];
 }

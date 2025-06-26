@@ -38,17 +38,7 @@ export async function getUserCountryCode(): Promise<string> {
   return FALLBACK_USER_LOCATION;
 }
 
-export async function isReloadlySandbox() {
-  const response = await fetch(`${getApiBaseUrl()}/get-cards-env`);
-  if (response.status == 200) {
-    const responseJson = await response.json();
-    return responseJson.USE_RELOADLY_SANDBOX === "true";
-  }
-  return false;
-}
-
-export async function detectCardsEnv() {
-  const isCardsSandbox = await isReloadlySandbox();
+export async function detectCardsEnv(isCardsSandbox: boolean) {
   if (isCardsSandbox && !document.querySelector(".cards-env")) {
     const cardEnvElement = document.createElement("div");
     cardEnvElement.classList.add("cards-env");
