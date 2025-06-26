@@ -4,6 +4,7 @@ import { getGiftCardValue } from "../../../shared/pricing";
 import { GiftCard } from "../../../shared/types";
 import { getSuitableCard } from "./ai";
 import { getApiBaseUrl, getUserCountryCode, requestInit } from "./utils";
+import { mint } from "../rewards/gift-cards/mint/mint-action";
 
 const html = String.raw;
 
@@ -39,7 +40,7 @@ export async function presentPaymentCard(contentElement: HTMLElement) {
   if (suitableCard) {
     const cardHtml = getSingleGiftCardHtml(suitableCard, reward);
     contentElement.innerHTML = cardHtml;
-    addCardEvents();
+    addCardEvents(suitableCard);
   } else {
     contentElement.innerHTML = `<p class="card-error">No gift cards available for your permit for ${allCountries[countryCode]}.</p>`;
   }
@@ -103,11 +104,15 @@ export function getSingleGiftCardHtml(card: GiftCard, amount: BigNumberish): str
   `;
 }
 
-function addCardEvents() {
+function addCardEvents(card: GiftCard) {
   document.getElementById("card-details")?.addEventListener("click", () => {
     const detailsElement = document.getElementById("details");
     if (detailsElement) {
       detailsElement.style.display = detailsElement.style.display == "block" ? "none" : "block";
     }
+  });
+
+  document.getElementById("mint")?.addEventListener("click", () => {
+    mint(card).catch(console.error);
   });
 }
