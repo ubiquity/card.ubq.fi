@@ -3,7 +3,7 @@ import { ethers } from "ethers";
 import { PostOrderParams } from "../../../../../shared/api-types";
 import { giftCardTreasuryAddress, permit2Address } from "../../../../../shared/constants";
 import { getGiftCardOrderId, getMintMessageToSign, isGiftCardAvailable } from "../../../../../shared/helpers";
-import { getTotalPriceOfValue } from "../../../../../shared/pricing";
+import { getGiftCardValue } from "../../../../../shared/pricing";
 import { GiftCard } from "../../../../../shared/types";
 import { postOrder } from "../../../shared/api";
 import { permit2Abi } from "../../abis";
@@ -29,15 +29,16 @@ export async function mint(giftCard: GiftCard) {
     return;
   }
 
-  const value = (document.getElementById("value") as HTMLInputElement).value;
-  const price = getTotalPriceOfValue(Number(value), giftCard);
+  console.log("activePermit", activePermit);
 
-  if (!isGiftCardAvailable(giftCard, ethers.utils.parseEther(price.toString()))) {
+  const value = getGiftCardValue(giftCard, activePermit.amount);
+
+  if (!isGiftCardAvailable(giftCard, activePermit.amount)) {
     toaster.create("error", "This payment card is not available in your permit amount.");
     return;
   }
 
-  console.log(`Minting payment card with amount: ${value}, price: ${price} for product ID: ${giftCard.productId}`);
+  console.log(`Minting payment card with amount: ${value}, price: ${activePermit.amount} for product ID: ${giftCard.productId}`);
 
   try {
     console.log("Using active permit for minting gift card.", activePermit);
@@ -136,6 +137,7 @@ async function claimPermitToCardTreasury(app: AppState) {
     return;
   }
   const isClaimable = await checkPermitClaimable(app);
+  console.log("isClaimable", isClaimable);
   if (isClaimable) {
     const permit2Contract = new ethers.Contract(permit2Address, permit2Abi, app.signer);
     if (!permit2Contract) return;
