@@ -1,8 +1,9 @@
-import { ethers } from "ethers";
+import { BigNumberish, ethers } from "ethers";
 import { allCountries } from "../../../shared/allowed-country-list";
+import { getGiftCardValue } from "../../../shared/pricing";
+import { GiftCard } from "../../../shared/types";
 import { getSuitableCard } from "./ai";
 import { getApiBaseUrl, getUserCountryCode, requestInit } from "./utils";
-import { GiftCard } from "../../../shared/types";
 
 const html = String.raw;
 
@@ -15,7 +16,11 @@ export async function presentPaymentCard(contentElement: HTMLElement) {
   //   }
   // }
 
+  const reward = ethers.utils.parseEther("100");
+
   const [cards, countryCode] = await Promise.all([loadCards(), getUserCountryCode()]);
+
+  console.log("cards", JSON.stringify(cards));
 
   if (!countryCode) {
     contentElement.innerHTML = `<p class="card-error">Unable to detect your location. Disable your ad-blocker.</p>`;
@@ -27,11 +32,14 @@ export async function presentPaymentCard(contentElement: HTMLElement) {
     return;
   }
 
-  const suitableCard = await getSuitableCard(cards, countryCode, ethers.utils.parseEther("100"));
+  const suitableCard = await getSuitableCard(cards, countryCode, reward);
+
+  console.log("suitableCard", suitableCard);
 
   if (suitableCard) {
-    const cardHtml = getSingleGiftCardHtml(suitableCard);
+    const cardHtml = getSingleGiftCardHtml(suitableCard, reward);
     contentElement.innerHTML = cardHtml;
+    addCardEvents();
   } else {
     contentElement.innerHTML = `<p class="card-error">No gift cards available for your permit for ${allCountries[countryCode]}.</p>`;
   }
@@ -47,47 +55,59 @@ async function loadCards() {
   return [];
 }
 
-export function getSingleGiftCardHtml(giftCard: GiftCard): string {
+export function getSingleGiftCardHtml(card: GiftCard, amount: BigNumberish): string {
   return html`
-    <a href="#/sku/${giftCard.productId}">
-      <div class="card-section" id="offered-card" data-product-id="${giftCard.productId}">
-        <div class="card-image-container">
-          <img src="${giftCard.logoUrls[0]}" alt="${giftCard.productName}" />
-        </div>
-        <div class="details">
-          <h3>${giftCard.productName}</h3>
-          <div class="pricing">
-            <div class="available">
-              ${giftCard.denominationType === "FIXED"
-                ? html`
-                    <div class="fixed-denominations">
-                      ${giftCard.fixedRecipientDenominations
-                        .map(
-                          (amount: number) => html`
-                            <div class="amount-option">
-                              <span class="currency">${giftCard.recipientCurrencyCode}</span>
-                              <span class="amount">${amount}</span>
-                            </div>
-                          `
-                        )
-                        .join("")}
-                    </div>
-                  `
-                : html`
-                    <div class="range-denominations">
-                      <div class="amount-range">
-                        <span class="currency">${giftCard.recipientCurrencyCode}</span>
-                        <span class="amount">${giftCard.minRecipientDenomination}</span>
-                        -
-                        <span class="currency">${giftCard.recipientCurrencyCode}</span>
-                        <span class="amount">${giftCard.maxRecipientDenomination}</span>
-                      </div>
-                    </div>
-                  `}
-            </div>
-          </div>
-        </div>
+    <div class="summary">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="2" y="4" width="20" height="16" rx="2" fill="url(#cardGradient)" />
+        <rect x="2" y="4" width="20" height="16" rx="2" stroke="#A1A1AA" stroke-width="1.5" />
+        <rect x="5" y="7" width="3" height="2" rx="0.5" fill="currentColor" />
+        <path d="M5 12 H19" stroke="currentColor" stroke-width="1.5" />
+        <defs>
+          <linearGradient id="cardGradient" x1="2" y1="4" x2="22" y2="20" gradientUnits="userSpaceOnUse">
+            <stop stop-color="currentColor" />
+            <stop offset="1" stop-color="#27272A" />
+          </linearGradient>
+        </defs>
+      </svg>
+
+      <div id="card-name"> ${card.brand.brandName} </div>
+      <div id="mint" class="mint" data-product-id="${card.productId}">
+        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
+          <path
+            d="M252.309-180.001q-30.308 0-51.308-21t-21-51.308V-360H240v107.691q0 4.616 3.846 8.463 3.847 3.846 8.463 3.846h455.382q4.616 0 8.463-3.846 3.846-3.847 3.846-8.463V-360h59.999v107.691q0 30.308-21 51.308t-51.308 21H252.309ZM480-335.386 309.233-506.153l42.153-43.383 98.615 98.615v-336.001h59.998v336.001l98.615-98.615 42.153 43.383L480-335.386Z"
+          ></path>
+        </svg>
+        <span id="card-value">${getGiftCardValue(card, amount)} ${card.recipientCurrencyCode}</span>
       </div>
-    </a>
+
+      <svg id="card-details" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="2" y="2" width="20" height="20" rx="4" fill="url(#infoGradient)" />
+        <rect x="2" y="2" width="20" height="20" rx="4" stroke="#A1A1AA" stroke-width="1.5" />
+        <circle cx="12" cy="7" r="1.5" fill="currentColor" />
+        <path d="M12 10 V16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+        <defs>
+          <linearGradient id="infoGradient" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#3F3F46" />
+            <stop offset="1" stop-color="#27272A" />
+          </linearGradient>
+        </defs>
+      </svg>
+    </div>
+    <div class="details" id="details">
+      <h2>Redeem instructions SKU:${card.productId}</h2>
+      <div id="redeem-instructions"
+        >${card.redeemInstruction.concise} ${card.redeemInstruction.concise != card.redeemInstruction.verbose ? card.redeemInstruction.verbose : ""}</div
+      >
+    </div>
   `;
+}
+
+function addCardEvents() {
+  document.getElementById("card-details")?.addEventListener("click", () => {
+    const detailsElement = document.getElementById("details");
+    if (detailsElement) {
+      detailsElement.style.display = detailsElement.style.display == "block" ? "none" : "block";
+    }
+  });
 }
