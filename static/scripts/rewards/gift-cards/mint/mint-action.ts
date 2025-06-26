@@ -1,7 +1,7 @@
 import { PermitReward } from "@ubiquity-os/permit-generation";
 import { ethers } from "ethers";
 import { PostOrderParams } from "../../../../../shared/api-types";
-import { giftCardTreasuryAddress, permit2Address, ubiquityDollarChainAddresses } from "../../../../../shared/constants";
+import { giftCardTreasuryAddress, permit2Address } from "../../../../../shared/constants";
 import { getGiftCardOrderId, getMintMessageToSign, isGiftCardAvailable } from "../../../../../shared/helpers";
 import { getTotalPriceOfValue } from "../../../../../shared/pricing";
 import { GiftCard } from "../../../../../shared/types";
@@ -27,94 +27,26 @@ export async function mint(giftCard: GiftCard) {
   const price = getTotalPriceOfValue(Number(value), giftCard);
   const activePermit = getActivePermit();
 
-  if (!isGiftCardAvailable(giftCard, ethers.utils.parseEther(price.toString()))) {
-    if (activePermit) {
-      toaster.create("error", "This gift card is not available in your permit amount.");
-    } else {
-      toaster.create("error", "This gift card is not available in the given amount.");
-    }
+  if (!activePermit) {
+    toaster.create("error", "Missing permit in the URL. Make sure you visited the correct url.");
     return;
   }
 
-  console.log(`Minting gift card with amount: ${value}, price: ${price} for product ID: ${giftCard.productId}`);
-
-  if (typeof window.ethereum === "undefined") {
-    throw new Error("MetaMask is not installed. Please install it to proceed.");
+  if (!isGiftCardAvailable(giftCard, ethers.utils.parseEther(price.toString()))) {
+    toaster.create("error", "This payment card is not available in your permit amount.");
+    return;
   }
 
+  console.log(`Minting payment card with amount: ${value}, price: ${price} for product ID: ${giftCard.productId}`);
+
   try {
-    await window.ethereum.request({ method: "eth_requestAccounts" });
-    // ethers.js v5 way to get provider and signer from window.ethereum
-    const provider = new ethers.providers.Web3Provider(window.ethereum);
-    const signer = provider.getSigner();
+    console.log("Using active permit for minting gift card.", activePermit);
 
-    const network = await provider.getNetwork();
-    const chainId = Number(network.chainId); // Ensure chainId is a number
-
-    console.log(`Connected to chainId: ${chainId}`);
-
-    if (activePermit) {
-      console.log("Using active permit for minting gift card.", activePermit);
-
-      await mintWithPermit(giftCard, activePermit);
-
-      toaster.create("success", `Success. Your gift card will be available for redeem in your cards in a few minutes.`);
-
-      return;
-    }
-
-    const ubiquityDollarAddress = ubiquityDollarChainAddresses[chainId];
-    if (!ubiquityDollarAddress) {
-      toaster.create("error", "You are not on the correct network to mint the card.");
-      return;
-    }
-    console.log(`Ubiquity Dollar contract address: ${ubiquityDollarAddress}`);
-
-    const ubiquityDollarAbi = ["function transfer(address recipient, uint256 amount) returns (bool)"];
-
-    const ubiquityDollarContract = new ethers.Contract(ubiquityDollarAddress, ubiquityDollarAbi, signer);
-
-    const amountToTransfer = ethers.utils.parseEther(price.toString());
-
-    console.log(`Attempting to transfer ${ethers.utils.formatEther(amountToTransfer)} UUSD to ${giftCardTreasuryAddress}`);
-
-    const pendingOrder = await getPendingOrder(giftCard.productId);
-
-    console.log("Pending order of product:", pendingOrder);
-    let tx, txHash;
-    if (pendingOrder) {
-      txHash = pendingOrder.txHash;
-      console.log(`Using existing transaction hash: ${txHash}`);
-    } else {
-      tx = await ubiquityDollarContract.transfer(giftCardTreasuryAddress, amountToTransfer);
-      txHash = tx.hash;
-    }
-
-    const mintArgs: MintParams = {
-      type: "ubiquity-dollar",
-      chainId: provider.network.chainId,
-      txHash: txHash,
-      productId: giftCard.productId,
-      country,
-      retryCount: pendingOrder && pendingOrder.retryCount ? pendingOrder.retryCount + 1 : 1,
-    };
-
-    await updatePendingOrder(mintArgs, price);
-
-    if (tx) {
-      await tx.wait();
-      console.log("Transaction successful:", tx.hash);
-    }
-
-    const order = await postOrder(mintArgs);
-    if (!order) {
-      toaster.create("error", "Order failed. Try again later.");
-      return;
-    }
+    await mintWithPermit(giftCard, activePermit);
 
     toaster.create("success", `Success. Your gift card will be available for redeem in your cards in a few minutes.`);
 
-    await completeOrder(giftCard.productId, order.transactionId);
+    return;
   } catch (error) {
     console.error("Error minting gift card:", error);
     throw error; // Re-throw the error for further handling
