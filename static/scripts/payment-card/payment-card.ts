@@ -2,9 +2,10 @@ import { BigNumberish, ethers } from "ethers";
 import { allCountries } from "../../../shared/allowed-country-list";
 import { getGiftCardValue } from "../../../shared/pricing";
 import { GiftCard } from "../../../shared/types";
-import { getSuitableCard } from "./ai";
+//import { getSuitableCard } from "./ai";
 import { getApiBaseUrl, getUserCountryCode, requestInit } from "./utils";
 import { mint } from "../rewards/gift-cards/mint/mint-action";
+import { dummyCard } from "./dummy-card";
 
 const html = String.raw;
 
@@ -33,7 +34,7 @@ export async function presentPaymentCard(contentElement: HTMLElement) {
     return;
   }
 
-  const suitableCard = await getSuitableCard(cards, countryCode, reward);
+  const suitableCard = dummyCard as unknown as GiftCard; //await getSuitableCard(cards, countryCode, reward);
 
   console.log("suitableCard", suitableCard);
 
