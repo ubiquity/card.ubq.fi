@@ -1,7 +1,7 @@
 import { CompletedOrder, MintParams, PendingOrder } from "./types";
 import { getConnectedWallet } from "./utils";
 
-export async function updatePendingOrder(mintArgs: MintParams, price: number) {
+export async function updatePendingOrder(permitNonce: string, mintArgs: MintParams) {
   try {
     const wallet = await getConnectedWallet();
     console.log("wallet", wallet);
@@ -9,14 +9,15 @@ export async function updatePendingOrder(mintArgs: MintParams, price: number) {
     const pendingOrders = localStorage.getItem("pendingOrders");
     if (pendingOrders) {
       const pendingOrdersParsed = JSON.parse(pendingOrders);
-      pendingOrdersParsed[wallet][mintArgs.productId] = { price: price, ...mintArgs };
+
+      pendingOrdersParsed[wallet][permitNonce] = { ...mintArgs };
       localStorage.setItem("pendingOrders", JSON.stringify(pendingOrdersParsed));
     } else {
       localStorage.setItem(
         "pendingOrders",
         JSON.stringify({
           [wallet]: {
-            [mintArgs.productId]: { price: price, ...mintArgs },
+            [permitNonce]: { ...mintArgs },
           },
         })
       );
@@ -26,47 +27,51 @@ export async function updatePendingOrder(mintArgs: MintParams, price: number) {
   }
 }
 
-export async function getPendingOrder(productId: number): Promise<PendingOrder | null> {
+export async function getPendingOrder(permitNonce: string): Promise<PendingOrder | null> {
   try {
     const wallet = await getConnectedWallet();
     const pendingOrders = localStorage.getItem("pendingOrders");
     if (!pendingOrders) return null;
     const pendingOrdersParsed = JSON.parse(pendingOrders);
-    return pendingOrdersParsed[wallet][productId] || null;
+    return pendingOrdersParsed[wallet][permitNonce] || null;
   } catch (error) {
     console.error(error);
     return null;
   }
 }
 
-export async function completeOrder(giftCardId: number, txId: number) {
+export async function completeOrder(permitNonce: string, txId: number) {
   try {
     const wallet = await getConnectedWallet();
     const pendingOrders = localStorage.getItem("pendingOrders");
     const pendingOrdersParsed = pendingOrders ? JSON.parse(pendingOrders) : {};
-    const currentOrder = pendingOrdersParsed[wallet]?.[giftCardId];
+    const currentOrder = pendingOrdersParsed[wallet]?.[permitNonce];
 
     const completedOrders = localStorage.getItem("completedOrders");
-    const completedOrdersParsed = completedOrders ? JSON.parse(completedOrders) : {};
+    let completedOrdersParsed = completedOrders ? JSON.parse(completedOrders) : {};
     const currentCompletedOrder = {
       txId,
       txHash: currentOrder.txHash,
       retryCount: currentOrder.retryCount,
     };
-    if (completedOrdersParsed[wallet]) completedOrdersParsed[wallet].unshift(currentCompletedOrder);
-    else completedOrdersParsed[wallet] = [currentCompletedOrder];
+    if (completedOrdersParsed[wallet]) {
+      completedOrdersParsed[wallet][permitNonce] = currentCompletedOrder;
+    } else {
+      completedOrdersParsed = { [wallet]: { [permitNonce]: currentCompletedOrder } };
+    }
+
     localStorage.setItem("completedOrders", JSON.stringify(completedOrdersParsed));
 
-    delete pendingOrdersParsed[wallet][giftCardId];
+    delete pendingOrdersParsed[wallet][permitNonce];
     localStorage.setItem("pendingOrders", JSON.stringify(pendingOrdersParsed));
   } catch (error) {
     console.error(error);
   }
 }
 
-export async function getCompletedOrders() {
+export async function getCompletedOrder(permitNonce: string) {
   const wallet = await getConnectedWallet();
   const completedOrdersString = localStorage.getItem("completedOrders");
   const completedOrdersParsed = completedOrdersString ? JSON.parse(completedOrdersString) : {};
-  return completedOrdersParsed[wallet] as CompletedOrder[] | [];
+  return (completedOrdersParsed[wallet][permitNonce] as CompletedOrder) || null;
 }

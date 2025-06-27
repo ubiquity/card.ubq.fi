@@ -1,5 +1,4 @@
 export type MintParams = {
-  type: "ubiquity-dollar" | "permit";
   chainId: number;
   txHash: string;
   productId: number;

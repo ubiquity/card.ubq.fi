@@ -1,4 +1,3 @@
-import { PermitReward } from "@ubiquity-os/permit-generation";
 import { ethers } from "ethers";
 import { PostOrderParams } from "../../../../../shared/api-types";
 import { giftCardTreasuryAddress, permit2Address } from "../../../../../shared/constants";
@@ -43,9 +42,7 @@ export async function mint(giftCard: GiftCard) {
   try {
     console.log("Using active permit for minting gift card.", activePermit);
 
-    await mintWithPermit(giftCard, activePermit);
-
-    toaster.create("success", `Success. Your gift card will be available for redeem in your cards in a few minutes.`);
+    await mintWithPermit(giftCard);
 
     return;
   } catch (error) {
@@ -54,7 +51,7 @@ export async function mint(giftCard: GiftCard) {
   }
 }
 
-export async function mintWithPermit(giftCard: GiftCard, activePermit: PermitReward) {
+export async function mintWithPermit(giftCard: GiftCard) {
   if (!app.signer) {
     toaster.create("error", "Connect your wallet.");
     return;
@@ -66,7 +63,7 @@ export async function mintWithPermit(giftCard: GiftCard, activePermit: PermitRew
     return;
   }
 
-  const pendingOrder = await getPendingOrder(giftCard.productId);
+  const pendingOrder = await getPendingOrder(app.reward.nonce.toString());
 
   console.log("Pending order of product:", pendingOrder);
   let tx, txHash;
@@ -79,7 +76,6 @@ export async function mintWithPermit(giftCard: GiftCard, activePermit: PermitRew
   }
 
   const mintParams: MintParams = {
-    type: "permit",
     chainId: app.signer.provider.network.chainId,
     txHash,
     productId: giftCard.productId,
@@ -87,7 +83,7 @@ export async function mintWithPermit(giftCard: GiftCard, activePermit: PermitRew
     retryCount: pendingOrder && pendingOrder.retryCount ? pendingOrder.retryCount + 1 : 1,
   };
 
-  await updatePendingOrder(mintParams, Number(ethers.utils.formatEther(activePermit.amount)));
+  await updatePendingOrder(app.reward.nonce.toString(), mintParams);
 
   if (tx) {
     await tx.wait();
@@ -104,6 +100,7 @@ export async function mintWithPermit(giftCard: GiftCard, activePermit: PermitRew
 
   const order = await postOrder({
     signedMessage: signedMessage,
+    type: "permit",
     ...mintParams,
   } as PostOrderParams);
 
@@ -111,12 +108,13 @@ export async function mintWithPermit(giftCard: GiftCard, activePermit: PermitRew
     toaster.create("error", "Order failed. Try again in a few minutes.");
     return;
   }
+  toaster.create("success", `Success. Your gift card will be available for redeem in your cards in a few minutes.`);
   await checkForMintingDelay(mintParams, order.transactionId);
 }
 
 async function checkForMintingDelay(mintParams: MintParams, txId: number) {
   if (await hasMintingFinished(mintParams)) {
-    await completeOrder(mintParams.productId, txId);
+    await completeOrder(app.reward.nonce.toString(), txId);
     await init();
   } else {
     const interval = setInterval(async () => {
