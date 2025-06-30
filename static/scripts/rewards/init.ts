@@ -15,9 +15,7 @@ footer.classList.add("ready");
 function gridLoadedCallback() {
   document.body.classList.add("grid-loaded");
 }
-readClaimDataFromUrl(app).catch(console.error); // @DEV: read
-
-init().catch(console.error);
+readClaimDataFromUrl(app).then(init).catch(console.error);
 window.addEventListener("hashchange", () => {
   init().catch(console.error);
 });
