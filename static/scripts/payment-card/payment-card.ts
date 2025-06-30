@@ -1,25 +1,37 @@
-import { BigNumberish, ethers } from "ethers";
+import { BigNumberish } from "ethers";
 import { allCountries } from "../../../shared/allowed-country-list";
 import { getGiftCardValue } from "../../../shared/pricing";
-import { GiftCard } from "../../../shared/types";
+import { GiftCard, OrderTransaction } from "../../../shared/types";
 //import { getSuitableCard } from "./ai";
-import { getApiBaseUrl, getUserCountryCode, requestInit } from "./utils";
-import { mint } from "../rewards/gift-cards/mint/mint-action";
-import { dummyCard } from "./dummy-card";
+import { getGiftCardOrderId } from "../../../shared/helpers";
+import { app } from "../rewards/app-state";
 import { detectCardsEnv } from "../rewards/gift-cards/helpers";
+import { mint } from "../rewards/gift-cards/mint/mint-action";
+import { getCompletedOrder } from "../rewards/gift-cards/order-storage";
+import { toaster } from "../rewards/toaster";
+import { dummyCardSandbox } from "./dummy-card";
+import { getApiBaseUrl, getUserCountryCode, requestInit } from "./utils";
 
 const html = String.raw;
 
 export async function presentPaymentCard(contentElement: HTMLElement) {
-  // const activePermit = getActivePermit();
-  // if (activePermit) {
-  //   const permitElement = document.getElementById("permit");
-  //   if (permitElement) {
-  //     permitElement.innerHTML = `Claim Gift Card for Permit: ${ethers.utils.formatEther(activePermit.amount)} UUSD`;
-  //   }
-  // }
+  const address = await app.signer?.getAddress();
+  if (!address) {
+    toaster.create("error", "Missing signer.");
+    return;
+  }
 
-  const reward = ethers.utils.parseEther("100");
+  const completedOrder = await getCompletedOrder(app.reward.nonce.toString());
+  if (completedOrder) {
+    const orderId = getGiftCardOrderId(address, completedOrder.txHash, completedOrder.retryCount);
+    const order = await getOrder(orderId);
+    console.log("order", order);
+
+    // const orderHtml = getOrderHtml(order);
+    // contentElement.innerHTML = orderHtml;
+    // addOrderEvents(order);
+    return;
+  }
 
   const [cards, countryCode] = await Promise.all([loadCards(), getUserCountryCode()]);
 
@@ -35,12 +47,12 @@ export async function presentPaymentCard(contentElement: HTMLElement) {
     return;
   }
 
-  const suitableCard = dummyCard as unknown as GiftCard; //await getSuitableCard(cards, countryCode, reward);
+  const suitableCard = dummyCardSandbox as unknown as GiftCard; //await getSuitableCard(cards, countryCode, reward);
 
   console.log("suitableCard", suitableCard);
 
   if (suitableCard) {
-    const cardHtml = getSingleGiftCardHtml(suitableCard, reward);
+    const cardHtml = getSingleGiftCardHtml(suitableCard, app.reward.amount);
     contentElement.innerHTML = cardHtml;
     addCardEvents(suitableCard);
   } else {
@@ -61,6 +73,21 @@ async function loadCards() {
     return responseJson.cards as GiftCard[];
   }
   return [];
+}
+
+async function getOrder(orderId: string) {
+  const retrieveCardsUrl = `${getApiBaseUrl()}/get-order?orderId=${orderId}`;
+  const orderResponse = await fetch(retrieveCardsUrl, requestInit);
+  const responseJson = await orderResponse.json();
+
+  if (responseJson.isSandbox) {
+    detectCardsEnv(responseJson.isSandbox).catch(console.error);
+  }
+
+  if (orderResponse.status === 200) {
+    return responseJson.transaction as OrderTransaction[];
+  }
+  return null;
 }
 
 export function getSingleGiftCardHtml(card: GiftCard, amount: BigNumberish): string {
