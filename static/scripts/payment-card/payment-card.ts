@@ -105,25 +105,6 @@ export function getSingleGiftCardHtml(card: GiftCard, amount: BigNumberish): str
         </svg>
         <span id="card-value">${getGiftCardValue(card, amount)} ${card.recipientCurrencyCode}</span>
       </div>
-
-      <svg id="card-details" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="2" y="2" width="20" height="20" rx="4" fill="url(#infoGradient)" />
-        <rect x="2" y="2" width="20" height="20" rx="4" stroke="#A1A1AA" stroke-width="1.5" />
-        <circle cx="12" cy="7" r="1.5" fill="currentColor" />
-        <path d="M12 10 V16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-        <defs>
-          <linearGradient id="infoGradient" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
-            <stop stop-color="#3F3F46" />
-            <stop offset="1" stop-color="#27272A" />
-          </linearGradient>
-        </defs>
-      </svg>
-    </div>
-    <div class="details" id="details">
-      <h2>Redeem instructions SKU:${card.productId}</h2>
-      <div id="redeem-instructions"
-        >${card.redeemInstruction.concise} ${card.redeemInstruction.concise != card.redeemInstruction.verbose ? card.redeemInstruction.verbose : ""}</div
-      >
     </div>
   `;
 }
