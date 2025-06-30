@@ -1,5 +1,7 @@
 import { OrderTransaction } from "../../../shared/types";
 import { detectCardsEnv } from "../rewards/gift-cards/helpers";
+import { attachRevealAction } from "../rewards/gift-cards/reveal/reveal-action";
+import { CompletedOrder } from "../rewards/gift-cards/types";
 import { getApiBaseUrl, requestInit } from "./utils";
 
 const html = String.raw;
@@ -54,15 +56,8 @@ export function getOrderHtml(transaction: OrderTransaction): string {
   `;
 }
 
-// function addCardEvents(card: GiftCard) {
-//   document.getElementById("card-details")?.addEventListener("click", () => {
-//     const detailsElement = document.getElementById("details");
-//     if (detailsElement) {
-//       detailsElement.style.display = detailsElement.style.display == "block" ? "none" : "block";
-//     }
-//   });
-
-//   document.getElementById("mint")?.addEventListener("click", () => {
-//     mint(card).catch(console.error);
-//   });
-// }
+export function addOrderEvents(completedOrder: CompletedOrder) {
+  document.getElementById("reveal")?.addEventListener("click", () => {
+    attachRevealAction(completedOrder).catch(console.error);
+  });
+}

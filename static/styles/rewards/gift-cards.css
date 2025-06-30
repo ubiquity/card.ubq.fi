@@ -560,10 +560,11 @@
 .content .details {
   max-height: 120px;
   overflow-y: auto;
-  display: none;
+  text-align: center;
 }
 
-.mint {
+.mint,
+.reveal {
   display: flex;
   justify-content: center;
   align-items: center;

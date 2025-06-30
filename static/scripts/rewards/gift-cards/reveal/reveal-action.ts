@@ -1,32 +1,26 @@
 import { getRevealMessageToSign } from "../../../../../shared/helpers";
-import { RedeemCode, OrderTransaction } from "../../../../../shared/types";
-import { app, AppState } from "../../app-state";
+import { RedeemCode } from "../../../../../shared/types";
+import { app } from "../../app-state";
 import { toaster } from "../../toaster";
-import { CompletedOrder } from "../gift-card";
 import { getApiBaseUrl } from "../helpers";
+import { CompletedOrder } from "../types";
 
-export function attachRevealAction(transaction: OrderTransaction, app: AppState) {
-  const revealBtn = document.getElementById("reveal");
-  const loaderAttribute = "data-loading";
-  revealBtn?.addEventListener("click", async () => {
-    revealBtn.setAttribute(loaderAttribute, "true");
-    const transactionId = document.getElementById("redeem-code")?.getAttribute("data-transaction-id");
-    if (app?.signer && transactionId) {
-      try {
-        const signedMessage = await app.signer.signMessage(getRevealMessageToSign(Number(transactionId)));
-        await revealRedeemCode(transaction.transactionId, signedMessage, app);
-      } catch (error) {
-        toaster.create("error", "You did not sign the message to reveal redeem code.");
-        revealBtn.setAttribute(loaderAttribute, "false");
-      }
-    } else {
-      toaster.create("error", "Connect your wallet to reveal the redeem code.");
-    }
-    revealBtn.setAttribute(loaderAttribute, "false");
-  });
+export async function attachRevealAction(completedOrder: CompletedOrder) {
+  if (!app?.signer) {
+    toaster.create("error", "Connect your wallet to reveal the redeem code.");
+    return;
+  }
+
+  try {
+    const signedMessage = await app.signer.signMessage(getRevealMessageToSign(completedOrder));
+    await revealRedeemCode(completedOrder, signedMessage);
+  } catch (error) {
+    toaster.create("error", "You did not sign the message to reveal redeem code.");
+    return;
+  }
 }
 
-async function revealRedeemCode(transactionId: number, signedMessage: string, app: AppState) {
+async function revealRedeemCode(completedOrder: CompletedOrder, signedMessage: string) {
   const requestInit = {
     method: "GET",
     headers: {
@@ -35,7 +29,7 @@ async function revealRedeemCode(transactionId: number, signedMessage: string, ap
   };
 
   const response = await fetch(
-    `${getApiBaseUrl()}/get-redeem-code?transactionId=${transactionId}&signedMessage=${signedMessage}&wallet=${await app.signer?.getAddress()}&permitSig=${app.reward.signature}`,
+    `${getApiBaseUrl()}/get-redeem-code?txId=${completedOrder.txId}&txHash=${completedOrder.txHash}&signedMessage=${signedMessage}&wallet=${await app.signer?.getAddress()}&retryCount=${completedOrder.retryCount}`,
     requestInit
   );
 
@@ -46,8 +40,8 @@ async function revealRedeemCode(transactionId: number, signedMessage: string, ap
 
   const responseJson = (await response.json()) as RedeemCode[];
 
-  const redeemCodeElement = document.getElementById("redeem-code");
-  if (redeemCodeElement) {
+  const detailsElement = document.getElementById("details");
+  if (detailsElement) {
     let codesHtml = "<h3>Redeem code</h3>";
     responseJson.forEach((code) => {
       const keys = Object.keys(code);
@@ -55,33 +49,6 @@ async function revealRedeemCode(transactionId: number, signedMessage: string, ap
         codesHtml += `<p>${key}: ${code[key as keyof RedeemCode]}</p>`;
       });
     });
-    redeemCodeElement.innerHTML = codesHtml;
+    detailsElement.innerHTML = codesHtml;
   }
-}
-
-export async function getRedeemCode(order: CompletedOrder) {
-  if (!app?.signer) {
-    toaster.create("error", "Connect your wallet to reveal the redeem code.");
-    return;
-  }
-  const signedMessage = await app.signer.signMessage(getRevealMessageToSign(order));
-
-  const requestInit = {
-    method: "GET",
-    headers: {
-      Accept: "application/json",
-    },
-  };
-
-  const response = await fetch(
-    `${getApiBaseUrl()}/get-redeem-code?txId=${order.txId}&txHash=${order.txHash}&retryCount=${order.retryCount}&signedMessage=${signedMessage}&wallet=${await app.signer?.getAddress()}`,
-    requestInit
-  );
-
-  if (response.status != 200) {
-    console.error(`Redeem code can't be revealed to the connected wallet.`);
-    return;
-  }
-
-  return (await response.json()) as RedeemCode[];
 }
