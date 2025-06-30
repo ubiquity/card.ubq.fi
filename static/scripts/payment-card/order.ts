@@ -38,7 +38,7 @@ export function getOrderHtml(transaction: OrderTransaction): string {
 
       <div id="card-name"> ${transaction.product.brand.brandName} </div>
       <div id="reveal" class="reveal" data-product-id="${transaction.transactionId}">
-        <svg fill="#000000" width="24px" height="24px" viewBox="0 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg">
+        <svg fill="currentColor" width="24px" height="24px" viewBox="0 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg">
           <g id="SVGRepo_bgCarrier" stroke-width="0" />
 
           <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round" />
