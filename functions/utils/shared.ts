@@ -1,5 +1,5 @@
 import { GiftCard } from "../../shared/types";
-import { AccessToken, ReloadlyFailureResponse } from "./types";
+import { AccessToken, Context, ReloadlyFailureResponse } from "./types";
 
 export const commonHeaders = {
   "Content-Type": "application/json",
@@ -21,7 +21,7 @@ export interface ReloadlyAuthResponse {
 
 export const RELOADLY_AUTH_URL = "https://auth.reloadly.com/oauth/token";
 export const RELOADLY_SANDBOX_API_URL = "https://giftcards-sandbox.reloadly.com";
-export const RELOADLY_PRODUCTION_API_URL = "https://web3-gateway-test.com/proxy/reloadly/production";
+export const RELOADLY_PRODUCTION_API_URL = "https://giftcards.reloadly.com";
 export function getReloadlyApiBaseUrl(isSandbox: boolean): string {
   if (isSandbox === false) {
     return RELOADLY_PRODUCTION_API_URL;
@@ -87,4 +87,8 @@ export async function getGiftCards(productQuery: string, country: string, access
   }
 
   return responseJson as GiftCard[];
+}
+
+export function getEnvVars(ctx: Context) {
+  return { isSandbox: ctx.env.USE_RELOADLY_SANDBOX };
 }
