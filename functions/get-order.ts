@@ -1,9 +1,8 @@
+import { getOrderParamsSchema } from "../shared/api-types";
 import { OrderTransaction } from "../shared/types";
 import { commonHeaders, getAccessToken, getReloadlyApiBaseUrl } from "./utils/shared";
-import { getGiftCardById } from "./post-order";
 import { AccessToken, Context, ReloadlyFailureResponse, ReloadlyGetTransactionResponse } from "./utils/types";
 import { validateEnvVars, validateRequestMethod } from "./utils/validators";
-import { getOrderParamsSchema } from "../shared/api-types";
 
 export async function onRequest(ctx: Context): Promise<Response> {
   try {
@@ -26,12 +25,7 @@ export async function onRequest(ctx: Context): Promise<Response> {
     if (!reloadlyTransaction) {
       return Response.json("Order not found.", { status: 404 });
     } else if (reloadlyTransaction.status && reloadlyTransaction.status == "SUCCESSFUL") {
-      try {
-        const product = await getGiftCardById(reloadlyTransaction.product.productId, accessToken);
-        return Response.json({ transaction: reloadlyTransaction, product: product }, { status: 200 });
-      } catch (error) {
-        return Response.json({ transaction: reloadlyTransaction, product: null }, { status: 200 });
-      }
+      return Response.json({ transaction: reloadlyTransaction }, { status: 200 });
     } else {
       return Response.json({ message: "There is no successful transaction for given order ID." }, { status: 404 });
     }
