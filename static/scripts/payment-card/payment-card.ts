@@ -1,7 +1,7 @@
 import { BigNumberish } from "ethers";
 import { allCountries } from "../../../shared/allowed-country-list";
 import { getGiftCardValue } from "../../../shared/pricing";
-import { GiftCard, OrderTransaction } from "../../../shared/types";
+import { GiftCard } from "../../../shared/types";
 //import { getSuitableCard } from "./ai";
 import { getGiftCardOrderId } from "../../../shared/helpers";
 import { app } from "../rewards/app-state";
@@ -10,6 +10,7 @@ import { mint } from "../rewards/gift-cards/mint/mint-action";
 import { getCompletedOrder } from "../rewards/gift-cards/order-storage";
 import { toaster } from "../rewards/toaster";
 import { dummyCardSandbox } from "./dummy-card";
+import { getOrder, getOrderHtml } from "./order";
 import { getApiBaseUrl, getUserCountryCode, requestInit } from "./utils";
 
 const html = String.raw;
@@ -26,9 +27,13 @@ export async function presentPaymentCard(contentElement: HTMLElement) {
     const orderId = getGiftCardOrderId(address, completedOrder.txHash, completedOrder.retryCount);
     const order = await getOrder(orderId);
     console.log("order", order);
+    if (!order) {
+      toaster.create("error", "Unable to load the order. Please refresh in a few minutes.");
+      return;
+    }
 
-    // const orderHtml = getOrderHtml(order);
-    // contentElement.innerHTML = orderHtml;
+    const orderHtml = getOrderHtml(order);
+    contentElement.innerHTML = orderHtml;
     // addOrderEvents(order);
     return;
   }
@@ -73,21 +78,6 @@ async function loadCards() {
     return responseJson.cards as GiftCard[];
   }
   return [];
-}
-
-async function getOrder(orderId: string) {
-  const retrieveCardsUrl = `${getApiBaseUrl()}/get-order?orderId=${orderId}`;
-  const orderResponse = await fetch(retrieveCardsUrl, requestInit);
-  const responseJson = await orderResponse.json();
-
-  if (responseJson.isSandbox) {
-    detectCardsEnv(responseJson.isSandbox).catch(console.error);
-  }
-
-  if (orderResponse.status === 200) {
-    return responseJson.transaction as OrderTransaction[];
-  }
-  return null;
 }
 
 export function getSingleGiftCardHtml(card: GiftCard, amount: BigNumberish): string {
