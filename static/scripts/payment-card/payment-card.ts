@@ -10,7 +10,7 @@ import { mint } from "../rewards/gift-cards/mint/mint-action";
 import { getCompletedOrder } from "../rewards/gift-cards/order-storage";
 import { toaster } from "../rewards/toaster";
 import { dummyCardSandbox } from "./dummy-card";
-import { getOrder, getOrderHtml } from "./order";
+import { addOrderEvents, getOrder, getOrderHtml } from "./order";
 import { getApiBaseUrl, getUserCountryCode, requestInit } from "./utils";
 
 const html = String.raw;
@@ -34,7 +34,7 @@ export async function presentPaymentCard(contentElement: HTMLElement) {
 
     const orderHtml = getOrderHtml(order);
     contentElement.innerHTML = orderHtml;
-    // addOrderEvents(order);
+    addOrderEvents(completedOrder);
     return;
   }
 
