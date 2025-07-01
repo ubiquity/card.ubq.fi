@@ -1,3 +1,4 @@
+import { getCardDetailsHtml } from "../payment-card/card-details";
 import { presentPaymentCard } from "../payment-card/payment-card";
 import { hideLoader } from "../shared/loader";
 import { app } from "./app-state";
@@ -27,6 +28,14 @@ export async function init() {
     return;
   }
 
-  await presentPaymentCard(contentElement);
+  const hash = window.location.hash.replace("#/", "");
+  if (hash.indexOf("sku") === 0) {
+    const sku = Number(window.location.hash.replace("#/sku/", ""));
+    const html = await getCardDetailsHtml(sku);
+    contentElement.innerHTML = html;
+  } else {
+    await presentPaymentCard(contentElement);
+  }
+
   hideLoader();
 }
