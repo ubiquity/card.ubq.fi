@@ -1,5 +1,4 @@
 import { OrderTransaction } from "../../../shared/types";
-import { detectCardsEnv } from "../rewards/gift-cards/helpers";
 import { attachRevealAction } from "../rewards/gift-cards/reveal/reveal-action";
 import { CompletedOrder } from "../rewards/gift-cards/types";
 import { getApiBaseUrl, requestInit } from "./utils";
@@ -10,10 +9,6 @@ export async function getOrder(orderId: string) {
   const retrieveCardsUrl = `${getApiBaseUrl()}/get-order?orderId=${orderId}`;
   const orderResponse = await fetch(retrieveCardsUrl, requestInit);
   const responseJson = await orderResponse.json();
-
-  if (responseJson.isSandbox) {
-    detectCardsEnv(responseJson.isSandbox).catch(console.error);
-  }
 
   if (orderResponse.status == 200) {
     return responseJson.transaction as OrderTransaction;

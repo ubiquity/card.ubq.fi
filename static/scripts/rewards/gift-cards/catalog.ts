@@ -2,7 +2,7 @@ import { ethers } from "ethers";
 import { GiftCard } from "../../../../shared/types";
 import { hideLoader, showLoader } from "../../shared/loader";
 import { countryList, countryListDropdown } from "./country-list";
-import { detectCardsEnv, getApiBaseUrl, getUserCountryCode } from "./helpers";
+import { getApiBaseUrl, getUserCountryCode } from "./helpers";
 import { getActivePermit } from "./utils";
 
 const html = String.raw;
@@ -36,7 +36,6 @@ export async function showCatalog() {
   }
 
   if (loadedGiftCards.length === 0) {
-    void detectCardsEnv();
     const userCountryCode = countryElement?.value || (await getUserCountryCode());
     loadedGiftCards = await loadGiftCards(userCountryCode);
 

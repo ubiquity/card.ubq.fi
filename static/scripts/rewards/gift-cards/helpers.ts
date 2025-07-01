@@ -37,15 +37,3 @@ export async function getUserCountryCode(): Promise<string> {
   }
   return FALLBACK_USER_LOCATION;
 }
-
-export async function detectCardsEnv(isCardsSandbox: boolean) {
-  if (isCardsSandbox && !document.querySelector(".cards-env")) {
-    const cardEnvElement = document.createElement("div");
-    cardEnvElement.classList.add("cards-env");
-    cardEnvElement.textContent = "You are using Reloadly Sandbox.";
-    const footer = document.getElementsByTagName("footer");
-    if (footer.length) {
-      footer[0].parentNode?.insertBefore(cardEnvElement, footer[0].nextSibling);
-    }
-  }
-}

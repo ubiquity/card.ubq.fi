@@ -1,5 +1,5 @@
 import { GiftCardsResponse } from "../shared/types";
-import { commonHeaders, getAccessToken, getEnvVars, getReloadlyApiBaseUrl } from "./utils/shared";
+import { commonHeaders, getAccessToken, getReloadlyApiBaseUrl } from "./utils/shared";
 import { AccessToken, Context, ReloadlyFailureResponse } from "./utils/types";
 import { validateEnvVars, validateRequestMethod } from "./utils/validators";
 
@@ -11,13 +11,12 @@ export async function onRequest(ctx: Context): Promise<Response> {
     const accessToken = await getAccessToken(ctx.env);
     const cards = await getAllCards(accessToken);
 
-    return Response.json({ cards: cards, ...getEnvVars(ctx) }, { status: 200 });
+    return Response.json({ cards: cards }, { status: 200 });
   } catch (error) {
     console.error("There was an error while processing your request.", error);
     return Response.json(
       {
         message: "There was an error while processing your request.",
-        ...getEnvVars(ctx),
       },
       { status: 500 }
     );

@@ -1,6 +1,6 @@
 import { getOrderParamsSchema } from "../shared/api-types";
 import { OrderTransaction } from "../shared/types";
-import { commonHeaders, getAccessToken, getEnvVars, getReloadlyApiBaseUrl } from "./utils/shared";
+import { commonHeaders, getAccessToken, getReloadlyApiBaseUrl } from "./utils/shared";
 import { AccessToken, Context, ReloadlyFailureResponse, ReloadlyGetTransactionResponse } from "./utils/types";
 import { validateEnvVars, validateRequestMethod } from "./utils/validators";
 
@@ -23,15 +23,15 @@ export async function onRequest(ctx: Context): Promise<Response> {
     const reloadlyTransaction = await getTransactionFromOrderId(orderId, accessToken);
 
     if (!reloadlyTransaction) {
-      return Response.json({ message: "Order not found.", ...getEnvVars(ctx) }, { status: 404 });
+      return Response.json({ message: "Order not found." }, { status: 404 });
     } else if (reloadlyTransaction.status && reloadlyTransaction.status == "SUCCESSFUL") {
-      return Response.json({ transaction: reloadlyTransaction, ...getEnvVars(ctx) }, { status: 200 });
+      return Response.json({ transaction: reloadlyTransaction }, { status: 200 });
     } else {
-      return Response.json({ message: "There is no successful transaction for given order ID.", ...getEnvVars(ctx) }, { status: 404 });
+      return Response.json({ message: "There is no successful transaction for given order ID." }, { status: 404 });
     }
   } catch (error) {
     console.error("There was an error while processing your request.", error);
-    return Response.json({ message: "There was an error while processing your request.", ...getEnvVars(ctx) }, { status: 500 });
+    return Response.json({ message: "There was an error while processing your request." }, { status: 500 });
   }
 }
 

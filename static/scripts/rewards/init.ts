@@ -1,4 +1,5 @@
 import { getCardDetailsHtml } from "../payment-card/card-details";
+import { notifySandboxCardEnv } from "../payment-card/env-detector";
 import { presentPaymentCard } from "../payment-card/payment-card";
 import { hideLoader } from "../shared/loader";
 import { app } from "./app-state";
@@ -16,6 +17,8 @@ footer.classList.add("ready");
 function gridLoadedCallback() {
   document.body.classList.add("grid-loaded");
 }
+
+notifySandboxCardEnv().catch(console.error);
 readClaimDataFromUrl(app).then(init).catch(console.error);
 window.addEventListener("hashchange", () => {
   init().catch(console.error);
