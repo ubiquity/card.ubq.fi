@@ -173,6 +173,9 @@ header a:hover #logo {
 main {
   display: flex;
   flex-direction: column;
+  justify-content: space-evenly;
+  align-items: center;
+  min-height: 100vh;
 }
 
 main div.receipt-container {
@@ -181,8 +184,6 @@ main div.receipt-container {
 }
 
 footer {
-  width: 100%;
-  position: fixed;
   bottom: 24px;
 }
 
