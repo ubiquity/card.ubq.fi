@@ -189,9 +189,6 @@
     opacity: 0.5;
   }
 }
-.card-section {
-  max-width: 240px;
-}
 
 .card-section .pricing .available {
   flex-wrap: wrap; /* Allows items to wrap to the next line */
