@@ -142,7 +142,7 @@ a {
 }
 
 div.footer > div {
-  padding: 48px 0;
+  padding: 8px 0;
   text-align: center;
   text-transform: uppercase;
   letter-spacing: 2px;
@@ -182,7 +182,8 @@ main div.receipt-container {
 
 footer {
   width: 100%;
-  position: relative;
+  position: fixed;
+  bottom: 24px;
 }
 
 #carousel {
