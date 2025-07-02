@@ -3,7 +3,6 @@ import { TransactionReceipt, TransactionResponse } from "@ethersproject/provider
 import { verifyMessage } from "@ethersproject/wallet";
 import { BigNumber } from "ethers";
 import { isGeoRestricted } from "../shared/allowed-country-list";
-import { PostOrderParams, postOrderParamsSchema } from "../shared/api-types";
 import { giftCardTreasuryAddress, permit2Address, ubiquityDollarAllowedChainIds, ubiquityDollarChainAddresses } from "../shared/constants";
 import { getGiftCardOrderId, getMintMessageToSign } from "../shared/helpers";
 import { getGiftCardValue, isClaimableForAmount } from "../shared/pricing";
@@ -14,6 +13,7 @@ import { getTransactionFromOrderId } from "./get-order";
 import { commonHeaders, getAccessToken, getReloadlyApiBaseUrl } from "./utils/shared";
 import { AccessToken, Context, ReloadlyFailureResponse, ReloadlyOrderResponse } from "./utils/types";
 import { validateEnvVars, validateRequestMethod } from "./utils/validators";
+import { PostOrderParams, postOrderParamsSchema } from "../shared/api-types";
 
 export async function onRequest(ctx: Context): Promise<Response> {
   try {
@@ -213,19 +213,19 @@ function validatePermitTransaction(
     return "The reward has expired.";
   }
 
-  const { type, productId, txHash, chainId, country, signedMessage } = postOrderParams;
+  const { productId, txHash, chainId, country, signedMessage } = postOrderParams;
   if (!signedMessage) {
     console.error(`Signed message is empty. ${JSON.stringify({ signedMessage })}`);
     return "Signed message is missing in the request.";
   }
-  const mintMessageToSign = getMintMessageToSign(type, chainId, txHash, productId, country);
+  const mintMessageToSign = getMintMessageToSign(chainId, txHash, productId, country);
   const signingWallet = verifyMessage(mintMessageToSign, signedMessage).toLocaleLowerCase();
   if (signingWallet != txReceipt.from.toLowerCase()) {
     console.error(
       `Signed message verification failed: ${JSON.stringify({
         wallet: txReceipt.from.toLowerCase(),
         signedMessage,
-        type,
+
         chainId,
         txHash,
         productId,

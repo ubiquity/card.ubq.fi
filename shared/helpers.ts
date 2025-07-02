@@ -19,10 +19,9 @@ export function getRevealMessageToSign(order: CompletedOrder) {
   });
 }
 
-export function getMintMessageToSign(type: "permit" | "ubiquity-dollar", chainId: number, txHash: string, productId: number, country: string) {
+export function getMintMessageToSign(chainId: number, txHash: string, productId: number, country: string) {
   return JSON.stringify({
     from: "pay.ubq.fi",
-    type,
     chainId,
     txHash,
     productId,

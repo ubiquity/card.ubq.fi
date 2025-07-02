@@ -100,7 +100,6 @@ export async function mintWithPermit(giftCard: GiftCard) {
 
   const order = await postOrder({
     signedMessage: signedMessage,
-    type: "permit",
     ...mintParams,
   } as PostOrderParams);
 
