@@ -10,7 +10,6 @@ const cssFiles: string[] = [
   "static/styles/toast.css",
   "static/styles/loader.css",
   "static/styles/rewards/gift-cards.css",
-  "static/styles/rewards/ubiquity-dollar.css",
   "static/styles/rewards/media-queries.css",
   "static/styles/rewards/light-mode.css",
 ];
@@ -18,7 +17,7 @@ const cssFiles: string[] = [
 // Output bundles file
 const outputFilePath = "static/out/bundles.css";
 
-const typescriptEntries = ["static/scripts/rewards/init.ts", "static/scripts/ubiquity-dollar/init.ts"];
+const typescriptEntries = ["static/scripts/rewards/init.ts"];
 export const entries = [...typescriptEntries];
 
 export const esBuildContext: esbuild.BuildOptions = {

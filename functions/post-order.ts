@@ -9,7 +9,6 @@ import { getGiftCardOrderId, getMintMessageToSign } from "../shared/helpers";
 import { getGiftCardValue, isClaimableForAmount } from "../shared/pricing";
 import { ExchangeRate, GiftCard } from "../shared/types";
 import { useRpcHandler } from "../shared/use-rpc-handler";
-import { erc20Abi } from "../static/scripts/rewards/abis/erc20-abi";
 import { permit2Abi } from "../static/scripts/rewards/abis/permit2-abi";
 import { getTransactionFromOrderId } from "./get-order";
 import { commonHeaders, getAccessToken, getReloadlyApiBaseUrl } from "./utils/shared";
@@ -27,7 +26,7 @@ export async function onRequest(ctx: Context): Promise<Response> {
     if (!result.success) {
       throw new Error(`Invalid post parameters: ${JSON.stringify(result.error.errors)}`);
     }
-    const { type, productId, txHash, chainId, country, retryCount } = result.data;
+    const { productId, txHash, chainId, country, retryCount } = result.data;
 
     const provider = await useRpcHandler(chainId);
 
@@ -41,35 +40,18 @@ export async function onRequest(ctx: Context): Promise<Response> {
       throw new Error(`Given transaction has not been mined yet. Please wait for it to be mined.`);
     }
 
-    let amountDaiWei;
-    let orderId;
+    const iface = new Interface(permit2Abi);
 
-    if (type === "ubiquity-dollar") {
-      const iface = new Interface(erc20Abi);
-      const txParsed = iface.parseTransaction({ data: tx.data });
-      console.log("Parsed transaction data: ", JSON.stringify(txParsed));
+    const txParsed = iface.parseTransaction({ data: tx.data });
+    console.log("Parsed transaction data: ", JSON.stringify(txParsed));
 
-      const validationErr = validateTransferTransaction(txParsed, txReceipt, chainId, giftCard);
-      if (validationErr) {
-        return Response.json({ message: validationErr }, { status: 403 });
-      }
-
-      orderId = getGiftCardOrderId(txReceipt.from, txHash, retryCount);
-      amountDaiWei = txParsed.args[1];
-    } else if (type === "permit") {
-      const iface = new Interface(permit2Abi);
-
-      const txParsed = iface.parseTransaction({ data: tx.data });
-      console.log("Parsed transaction data: ", JSON.stringify(txParsed));
-
-      const validationErr = validatePermitTransaction(txParsed, txReceipt, result.data, giftCard);
-      if (validationErr) {
-        return Response.json({ message: validationErr }, { status: 403 });
-      }
-
-      amountDaiWei = txParsed.args.transferDetails.requestedAmount;
-      orderId = getGiftCardOrderId(txReceipt.from, txHash, retryCount);
+    const validationErr = validatePermitTransaction(txParsed, txReceipt, result.data, giftCard);
+    if (validationErr) {
+      return Response.json({ message: validationErr }, { status: 403 });
     }
+
+    const amountDaiWei = txParsed.args.transferDetails.requestedAmount;
+    const orderId = getGiftCardOrderId(txReceipt.from, txHash, retryCount);
 
     let exchangeRate = 1;
     if (giftCard.recipientCurrencyCode != "USD") {
@@ -215,33 +197,6 @@ async function getExchangeRate(usdAmount: number, fromCurrency: string, accessTo
   console.log(`Response from ${url}`, responseJson);
 
   return responseJson as ExchangeRate;
-}
-
-function validateTransferTransaction(txParsed: TransactionDescription, txReceipt: TransactionReceipt, chainId: number, giftCard: GiftCard): string | null {
-  const transferAmount = txParsed.args[1];
-
-  if (!ubiquityDollarAllowedChainIds.includes(chainId)) {
-    return "Unsupported chain";
-  }
-
-  if (!isClaimableForAmount(giftCard, transferAmount)) {
-    return "Your reward amount is either too high or too low to buy this card.";
-  }
-
-  if (txParsed.functionFragment.name != "transfer") {
-    return "Given transaction is not a token transfer";
-  }
-
-  const ubiquityDollarErc20Address = ubiquityDollarChainAddresses[chainId];
-  if (txReceipt.to.toLowerCase() != ubiquityDollarErc20Address.toLowerCase()) {
-    return "Given transaction is not a Ubiquity Dollar transfer";
-  }
-
-  if (txParsed.args[0].toLowerCase() != giftCardTreasuryAddress.toLowerCase()) {
-    return "Given transaction is not a token transfer to treasury address";
-  }
-
-  return null;
 }
 
 function validatePermitTransaction(
