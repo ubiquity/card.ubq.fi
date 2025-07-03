@@ -92,7 +92,7 @@ export async function mintWithPermit(giftCard: GiftCard) {
 
   let signedMessage;
   try {
-    signedMessage = await app.signer.signMessage(getMintMessageToSign("permit", app.signer.provider.network.chainId, txHash, giftCard.productId, country));
+    signedMessage = await app.signer.signMessage(getMintMessageToSign(app.signer.provider.network.chainId, txHash, giftCard.productId, country));
   } catch (error) {
     toaster.create("error", "You did not sign the message to mint a payment card.");
     return;
