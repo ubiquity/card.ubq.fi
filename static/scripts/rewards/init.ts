@@ -19,7 +19,26 @@ function gridLoadedCallback() {
 }
 
 notifySandboxCardEnv().catch(console.error);
-readClaimDataFromUrl(app).then(init).catch(console.error);
+readClaimDataFromUrl(app)
+  .then(init)
+  .catch((e) => {
+    console.error(e);
+    const contentElement = document.getElementById("content");
+    if (!contentElement) {
+      console.error("Missing content section #content");
+      return;
+    }
+    let errMessage;
+
+    if (e instanceof Error) {
+      errMessage = e.message;
+    } else {
+      errMessage = JSON.stringify(e);
+    }
+
+    contentElement.innerHTML = `ERROR: ${errMessage}`;
+    hideLoader();
+  });
 window.addEventListener("hashchange", () => {
   init().catch(console.error);
 });

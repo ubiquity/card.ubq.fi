@@ -19,28 +19,21 @@ const urlParams = new URLSearchParams(window.location.search);
 const base64encodedTxData = urlParams.get("claim");
 
 export async function readClaimDataFromUrl(app: AppState) {
-  try {
-    app.signer = await connectWallet();
-  } catch (error) {
-    /* empty */
-  }
+  app.signer = await connectWallet();
 
   if (!base64encodedTxData) {
-    return;
+    throw new Error("Missing permit in the URL.");
   }
-
-  app.claims = decodePermits(base64encodedTxData);
-  app.claimTxs = await getClaimedTxs(app);
 
   try {
-    app.provider = await useRpcHandler(app.networkId ?? app.reward.networkId);
+    app.claims = decodePermits(base64encodedTxData);
   } catch (e) {
-    if (e instanceof Error) {
-      toaster.create("error", e.message);
-    } else {
-      toaster.create("error", JSON.stringify(e));
-    }
+    console.error(e);
+    throw new Error("Invalid permit in the URL.");
   }
+  app.claimTxs = await getClaimedTxs(app);
+
+  app.provider = await useRpcHandler(app.networkId ?? app.reward.networkId);
 }
 
 export async function updateButtonVisibility(app: AppState) {
