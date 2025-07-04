@@ -1,5 +1,4 @@
 import ct from "countries-and-timezones";
-import { FALLBACK_USER_LOCATION } from "../../shared/constants";
 
 declare const BACKEND_URL: string;
 
@@ -35,5 +34,5 @@ export async function getUserCountryCode(): Promise<string> {
       return countryCode;
     }
   }
-  return FALLBACK_USER_LOCATION;
+  throw new Error("Failed to detect user location.");
 }
