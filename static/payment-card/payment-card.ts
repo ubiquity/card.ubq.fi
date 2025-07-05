@@ -3,7 +3,7 @@ import { hideLoader } from "./common-ui/loader";
 import { grid } from "./common-ui/the-grid";
 import { getCardDetailsHtml } from "./components/card-details";
 import { displayCommitHash } from "./components/display-commit-hash";
-import { handleClaim } from "./components/payment-card";
+import { handleClaim } from "./components/handle-claim";
 import { notifySandboxCardEnv } from "./components/sandbox-detector";
 import { readClaimDataFromUrl } from "./services/read-claim-data-from-url.ts";
 
