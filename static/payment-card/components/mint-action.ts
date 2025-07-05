@@ -42,7 +42,7 @@ export async function mint(card: Card) {
   }
 }
 
-export async function mintWithPermit(giftCard: Card) {
+export async function mintWithPermit(card: Card) {
   if (!app.signer) {
     toaster.create("error", "Connect your wallet.");
     return;
@@ -69,7 +69,7 @@ export async function mintWithPermit(giftCard: Card) {
   const mintParams: MintParams = {
     chainId: app.signer.provider.network.chainId,
     txHash,
-    productId: giftCard.productId,
+    productId: card.productId,
     country: country,
     retryCount: pendingOrder && pendingOrder.retryCount ? pendingOrder.retryCount + 1 : 1,
   };
@@ -83,7 +83,7 @@ export async function mintWithPermit(giftCard: Card) {
 
   let signedMessage;
   try {
-    signedMessage = await app.signer.signMessage(getMintMessageToSign(app.signer.provider.network.chainId, txHash, giftCard.productId, country));
+    signedMessage = await app.signer.signMessage(getMintMessageToSign(app.signer.provider.network.chainId, txHash, card.productId, country));
   } catch (error) {
     toaster.create("error", "You did not sign the message to mint a payment card.");
     return;

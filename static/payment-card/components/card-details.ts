@@ -4,23 +4,23 @@ import { getApiBaseUrl } from "../utils";
 const html = String.raw;
 
 export async function getCardDetailsHtml(productId: number) {
-  const giftCard = await loadCard(productId);
-  if (!giftCard) {
+  const card = await loadCard(productId);
+  if (!card) {
     return `<div>Invalid SKU or the card is not available anymore.</div>`;
   }
-  const imageUrl = giftCard.logoUrls.length > 0 ? giftCard.logoUrls[0] : "https://via.placeholder.com/250x150?text=No+Image";
-  const imageAltText = giftCard.productName ? `${giftCard.productName} logo` : "Payment card logo";
+  const imageUrl = card.logoUrls.length > 0 ? card.logoUrls[0] : "https://via.placeholder.com/250x150?text=No+Image";
+  const imageAltText = card.productName ? `${card.productName} logo` : "Payment card logo";
 
   // Pre-calculate content using helper functions
-  const recipientDenominationsContent = renderRecipientDenominations(giftCard);
+  const recipientDenominationsContent = renderRecipientDenominations(card);
 
   return html`
-    <div class="product-detailed-card" data-product-id="${giftCard.productId}">
+    <div class="product-detailed-card" data-product-id="${card.productId}">
       <div class="product-header">
         <img src="${imageUrl}" alt="${imageAltText}" class="detailed-card-image" />
         <div class="header-text">
-          <h2>${giftCard.productName}</h2>
-          <p class="product-sku">SKU: ${giftCard.productId}</p>
+          <h2>${card.productName}</h2>
+          <p class="product-sku">SKU: ${card.productId}</p>
           <div class="pricing-details-section card-section">
             <div class="pricing">
               <div class="available"> ${recipientDenominationsContent} </div>
@@ -31,9 +31,9 @@ export async function getCardDetailsHtml(productId: number) {
 
       <div class="redeem-instructions-section card-section">
         <h3>Redeem Instructions</h3>
-        <div class="instructions">${giftCard.redeemInstruction.concise}</div>
-        ${giftCard.redeemInstruction.concise !== giftCard.redeemInstruction.verbose
-          ? `<div class="instructions">${giftCard.redeemInstruction.verbose}</div>
+        <div class="instructions">${card.redeemInstruction.concise}</div>
+        ${card.redeemInstruction.concise !== card.redeemInstruction.verbose
+          ? `<div class="instructions">${card.redeemInstruction.verbose}</div>
       `
           : ""}
       </div>
@@ -41,16 +41,16 @@ export async function getCardDetailsHtml(productId: number) {
   `;
 }
 
-function renderRecipientDenominations(giftCard: Card): string {
-  if (giftCard.denominationType === "FIXED") {
+function renderRecipientDenominations(card: Card): string {
+  if (card.denominationType === "FIXED") {
     return html`
       <div class="fixed-denominations">
-        ${giftCard.fixedRecipientDenominations
+        ${card.fixedRecipientDenominations
           .map(
             (amount) => html`
               <div class="amount-option">
-                <span class="currency">${giftCard.recipientCurrencyCode}</span>
-                <span class="amount">${formatCurrency(amount, giftCard.recipientCurrencyCode)}</span>
+                <span class="currency">${card.recipientCurrencyCode}</span>
+                <span class="amount">${formatCurrency(amount, card.recipientCurrencyCode)}</span>
               </div>
             `
           )
@@ -62,11 +62,11 @@ function renderRecipientDenominations(giftCard: Card): string {
     return html`
       <div class="range-denominations">
         <div class="amount-range">
-          <span class="currency">${giftCard.recipientCurrencyCode}</span>
-          <span class="amount">${formatCurrency(giftCard.minRecipientDenomination, giftCard.recipientCurrencyCode)}</span>
+          <span class="currency">${card.recipientCurrencyCode}</span>
+          <span class="amount">${formatCurrency(card.minRecipientDenomination, card.recipientCurrencyCode)}</span>
           -
-          <span class="currency">${giftCard.recipientCurrencyCode}</span>
-          <span class="amount">${formatCurrency(giftCard.maxRecipientDenomination, giftCard.recipientCurrencyCode)}</span>
+          <span class="currency">${card.recipientCurrencyCode}</span>
+          <span class="amount">${formatCurrency(card.maxRecipientDenomination, card.recipientCurrencyCode)}</span>
         </div>
       </div>
     `;

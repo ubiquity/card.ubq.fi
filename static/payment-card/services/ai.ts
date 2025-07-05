@@ -1,12 +1,12 @@
 import { BigNumberish } from "ethers";
+import { isCardAvailable } from "../../../shared/abis/helpers";
 import { Card } from "../../../shared/types/entity-types";
-import { isGiftCardAvailable } from "../../../functions/helpers/shared";
 import { OpenRouterCardPromptResponse } from "../types";
 import { allCountries } from "./countries";
 
 export async function getSuitableCard(cards: Card[], countryCode: string, amount: BigNumberish): Promise<Card | null> {
   const filteredCards = cards.filter((card) => {
-    return card.status === "ACTIVE" && isGiftCardAvailable(card, amount);
+    return card.status === "ACTIVE" && isCardAvailable(card, amount);
   });
 
   const minInfoCards = filteredCards.map((card) => {
