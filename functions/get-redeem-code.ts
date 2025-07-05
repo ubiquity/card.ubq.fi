@@ -1,11 +1,11 @@
 import { verifyMessage } from "@ethersproject/wallet";
-import { RedeemCode } from "../shared/types";
-import { OrderTransaction } from "../shared/types/entity-types";
+import { OrderTransaction, RedeemCode } from "../shared/types/entity-types";
 import { getRedeemCodeParamsSchema } from "../shared/types/params-types";
 import { ReloadlyFailureResponse, ReloadlyRedeemCodeResponse } from "../shared/types/response-types";
 import { AccessToken, commonHeaders, Context } from "./helpers/types";
 import { getRevealMessageToSign } from "../shared/message-signer";
-import { getAccessToken, getGiftCardOrderId, getReloadlyApiBaseUrl } from "./helpers/shared";
+import { getAccessToken, getReloadlyApiBaseUrl } from "./helpers/shared";
+import { getCardOrderId } from "../shared/abis/helpers";
 import { validateEnvVars, validateRequestMethod } from "./helpers/validators";
 
 export async function onRequest(ctx: Context): Promise<Response> {
@@ -49,14 +49,14 @@ export async function onRequest(ctx: Context): Promise<Response> {
       return errorResponse;
     }
     const transaction = transactions.foundTransactions[0];
-    if (transaction.customIdentifier !== getGiftCardOrderId(wallet, txHash, retryCount)) {
+    if (transaction.customIdentifier !== getCardOrderId(wallet, txHash, retryCount)) {
       console.error(
         `Order details couldn't pass integrity check. Make sure given info is correct.: ${JSON.stringify({
           wallet,
           txHash,
           retryCount,
           customIdentifier: transaction.customIdentifier,
-          customIdentifierCreated: getGiftCardOrderId(wallet, txHash, retryCount),
+          customIdentifierCreated: getCardOrderId(wallet, txHash, retryCount),
         })}`
       );
       return errorResponse;

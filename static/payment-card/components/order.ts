@@ -1,21 +1,21 @@
-import { OrderTransaction } from "../../../shared/types/entity-types";
-import { CompletedOrder } from "../../../functions/helpers/types";
-import { getApiBaseUrl, requestInit } from "../utils";
+import { getCardOrderId } from "../../../shared/abis/helpers";
+import { CompletedOrder } from "../../../shared/types/order-types";
+import { getOrderTransaction } from "../services/backend-calls";
+import { getConnectedWallet } from "../utils";
 import { attachRevealAction } from "./reveal-action";
 
 const html = String.raw;
 
-export async function getOrder(orderId: string) {
-  const retrieveCardsUrl = `${getApiBaseUrl()}/get-order?orderId=${orderId}`;
-  const orderResponse = await fetch(retrieveCardsUrl, requestInit);
-  const responseJson = await orderResponse.json();
+export async function getOrderHtml(completedOrder: CompletedOrder): Promise<string> {
+  const wallet = await getConnectedWallet();
+  const orderId = getCardOrderId(wallet, completedOrder.txHash, completedOrder.retryCount);
+  const transaction = await getOrderTransaction(orderId);
+  console.log("transaction", transaction);
 
-  if (orderResponse.status == 200) {
-    return responseJson.transaction as OrderTransaction;
+  if (!transaction) {
+    throw new Error("Unable to load the order. Please refresh in a few minutes.");
   }
-  return null;
-}
-export function getOrderHtml(transaction: OrderTransaction): string {
+
   return html`
     <div class="summary">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

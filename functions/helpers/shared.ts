@@ -1,9 +1,6 @@
-import { BigNumberish, ethers } from "ethers";
+import { RELOADLY_AUTH_URL, RELOADLY_PRODUCTION_API_URL, RELOADLY_SANDBOX_API_URL } from "../../shared/constants";
 import { ReloadlyAuthResponse } from "../../shared/types/response-types";
 import { AccessToken, Env } from "./types";
-import { RELOADLY_AUTH_URL, RELOADLY_PRODUCTION_API_URL, RELOADLY_SANDBOX_API_URL } from "../../shared/constants";
-import { isRangePriceGiftCardClaimable } from "../../shared/pricing";
-import { Card } from "../../shared/types/entity-types";
 
 export function getReloadlyApiBaseUrl(isSandbox: boolean): string {
   if (isSandbox === false) {
@@ -33,14 +30,5 @@ export async function getAccessToken(env: Env): Promise<AccessToken> {
       isSandbox: env.USE_RELOADLY_SANDBOX !== "false",
     };
   }
-  throw `Getting access token failed: ${JSON.stringify(await res.json())}`;
-}
-export function getGiftCardOrderId(wallet: string, txHash: string, retryCount: number) {
-  const checksumAddress = ethers.utils.getAddress(wallet);
-  const integrityString = checksumAddress + ":" + txHash + ":" + retryCount;
-  const integrityBytes = ethers.utils.toUtf8Bytes(integrityString);
-  return ethers.utils.keccak256(integrityBytes);
-}
-export function isGiftCardAvailable(giftCard: Card, reward: BigNumberish): boolean {
-  return giftCard.denominationType == "RANGE" && isRangePriceGiftCardClaimable(giftCard, reward);
+  throw new Error(`Getting access token failed: ${JSON.stringify(await res.json())}`);
 }

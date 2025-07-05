@@ -1,6 +1,7 @@
 import { JsonRpcSigner } from "@ethersproject/providers";
 import { ethers } from "ethers";
 import { toaster } from "../common-ui/toaster";
+import { app } from "../app-state";
 
 type StandardError = {
   code: number;
@@ -86,4 +87,13 @@ function connectErrorHandler(error: unknown) {
     return (window as unknown as { signer: ethers.providers.JsonRpcSigner }).signer;
   }
   return null;
+}
+
+export async function getConnectedWallet(): Promise<string> {
+  const address = await app.signer?.getAddress();
+  if (address) {
+    return address;
+  }
+
+  throw new Error("Connect your wallet.");
 }

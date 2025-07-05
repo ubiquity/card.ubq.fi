@@ -1,19 +1,19 @@
 import { ethers } from "ethers";
-import { PostOrderParams } from "../../../shared/types/params-types";
+import { permit2Abi } from "../../../shared/abis";
+import { getCardOrderId, isCardAvailable } from "../../../shared/abis/helpers";
 import { giftCardTreasuryAddress, permit2Address } from "../../../shared/constants";
 import { getMintMessageToSign } from "../../../shared/message-signer";
 import { getGiftCardValue } from "../../../shared/pricing";
-import { getGiftCardOrderId, isGiftCardAvailable } from "../../../functions/helpers/shared";
-import { permit2Abi } from "../../../shared/abis";
+import { Card } from "../../../shared/types/entity-types";
+import { PostOrderParams } from "../../../shared/types/params-types";
 import { app, AppState } from "../app-state";
 import { toaster } from "../common-ui/toaster";
 import { init } from "../payment-card";
+import { postOrder } from "../services/backend-calls";
+import { completeOrder, getPendingOrder, updatePendingOrder } from "../services/order-storage";
 import { MintParams } from "../types";
 import { getApiBaseUrl, getUserCountryCode } from "../utils";
-import { postOrder } from "../services/backend-calls";
 import { checkPermitClaimable, transferFromPermit } from "../web3/erc20-permit";
-import { completeOrder, getPendingOrder, updatePendingOrder } from "../services/order-storage";
-import { Card } from "../../../shared/types/entity-types";
 
 export async function mint(card: Card) {
   const country = await getUserCountryCode();
@@ -32,7 +32,7 @@ export async function mint(card: Card) {
 
   const value = getGiftCardValue(card, activePermit.amount);
 
-  if (!isGiftCardAvailable(card, activePermit.amount)) {
+  if (!isCardAvailable(card, activePermit.amount)) {
     toaster.create("error", "This payment card is not available in your permit amount.");
     return;
   }
@@ -153,7 +153,7 @@ async function claimPermitToCardTreasury(app: AppState) {
 }
 
 async function hasMintingFinished(mintParams: MintParams): Promise<boolean> {
-  const retrieveOrderUrl = `${getApiBaseUrl()}/get-order?orderId=${getGiftCardOrderId(app.reward.beneficiary, mintParams.txHash, mintParams.retryCount)}`;
+  const retrieveOrderUrl = `${getApiBaseUrl()}/get-order?orderId=${getCardOrderId(app.reward.beneficiary, mintParams.txHash, mintParams.retryCount)}`;
   const orderResponse = await fetch(retrieveOrderUrl, {
     method: "GET",
     headers: {

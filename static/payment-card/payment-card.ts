@@ -3,7 +3,7 @@ import { hideLoader } from "./common-ui/loader";
 import { grid } from "./common-ui/the-grid";
 import { getCardDetailsHtml } from "./components/card-details";
 import { displayCommitHash } from "./components/display-commit-hash";
-import { presentPaymentCard } from "./components/payment-card";
+import { handleClaim } from "./components/payment-card";
 import { notifySandboxCardEnv } from "./components/sandbox-detector";
 import { readClaimDataFromUrl } from "./services/read-claim-data-from-url.ts";
 
@@ -56,7 +56,7 @@ export async function init() {
     const html = await getCardDetailsHtml(sku);
     contentElement.innerHTML = html;
   } else {
-    await presentPaymentCard(contentElement);
+    await handleClaim(contentElement);
   }
 
   hideLoader();

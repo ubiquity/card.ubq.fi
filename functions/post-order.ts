@@ -12,7 +12,8 @@ import { giftCardTreasuryAddress, permit2Address, ubiquityDollarAllowedChainIds,
 import { getMintMessageToSign } from "../shared/message-signer";
 import { permit2Abi } from "../shared/abis/permit2-abi";
 import { getGiftCardValue, isClaimableForAmount } from "../shared/pricing";
-import { getAccessToken, getGiftCardOrderId, getReloadlyApiBaseUrl } from "./helpers/shared";
+import { getAccessToken, getReloadlyApiBaseUrl } from "./helpers/shared";
+import { getCardOrderId } from "../shared/abis/helpers";
 import { validateEnvVars, validateRequestMethod } from "./helpers/validators";
 
 export async function onRequest(ctx: Context): Promise<Response> {
@@ -51,7 +52,7 @@ export async function onRequest(ctx: Context): Promise<Response> {
     }
 
     const amountDaiWei = txParsed.args.transferDetails.requestedAmount;
-    const orderId = getGiftCardOrderId(txReceipt.from, txHash, retryCount);
+    const orderId = getCardOrderId(txReceipt.from, txHash, retryCount);
 
     let exchangeRate = 1;
     if (giftCard.recipientCurrencyCode != "USD") {

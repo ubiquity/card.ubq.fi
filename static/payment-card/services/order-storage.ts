@@ -1,6 +1,7 @@
 import { MintParams } from "../types";
 import { CompletedOrder, PendingOrder } from "../../../shared/types/order-types";
 import { getConnectedWallet } from "../utils";
+import { BigNumberish } from "ethers";
 
 export async function updatePendingOrder(permitNonce: string, mintArgs: MintParams) {
   try {
@@ -69,9 +70,9 @@ export async function completeOrder(permitNonce: string, txId: number) {
   }
 }
 
-export async function getCompletedOrder(permitNonce: string) {
+export async function getCompletedOrder(permitNonce: BigNumberish) {
   const wallet = await getConnectedWallet();
   const completedOrdersString = localStorage.getItem("completedOrders");
   const completedOrdersParsed = completedOrdersString ? JSON.parse(completedOrdersString) : {};
-  return (completedOrdersParsed[wallet][permitNonce] as CompletedOrder) || null;
+  return (completedOrdersParsed[wallet][permitNonce.toString()] as CompletedOrder) || null;
 }
