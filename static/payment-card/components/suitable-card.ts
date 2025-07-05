@@ -1,6 +1,6 @@
 import ct from "countries-and-timezones";
 import { BigNumberish } from "ethers";
-import { getGiftCardValue } from "../../../shared/pricing";
+import { getCardValue } from "../../../shared/pricing";
 import { Card } from "../../../shared/types/entity-types";
 import { getCards } from "../services/backend-calls";
 import { getUserCountryCode } from "../utils";
@@ -52,7 +52,7 @@ export function createCardHtml(card: Card, price: BigNumberish): string {
             d="M252.309-180.001q-30.308 0-51.308-21t-21-51.308V-360H240v107.691q0 4.616 3.846 8.463 3.847 3.846 8.463 3.846h455.382q4.616 0 8.463-3.846 3.846-3.847 3.846-8.463V-360h59.999v107.691q0 30.308-21 51.308t-51.308 21H252.309ZM480-335.386 309.233-506.153l42.153-43.383 98.615 98.615v-336.001h59.998v336.001l98.615-98.615 42.153 43.383L480-335.386Z"
           ></path>
         </svg>
-        <span id="card-value">${getGiftCardValue(card, price)} ${card.recipientCurrencyCode}</span>
+        <span id="card-value">${getCardValue(card, price)} ${card.recipientCurrencyCode}</span>
       </div>
     </div>
   `;

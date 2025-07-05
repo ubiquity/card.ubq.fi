@@ -104,7 +104,7 @@ export function getUsdValueForRangePrice(giftCard: Card, price: BigNumberish) {
 }
 
 export function isRangePriceGiftCardClaimable(giftCard: Card, rewardAmount: BigNumberish) {
-  const value = getGiftCardValue(giftCard, rewardAmount);
+  const value = getCardValue(giftCard, rewardAmount);
   return value >= giftCard.minRecipientDenomination && value <= giftCard.maxRecipientDenomination;
 }
 
@@ -126,7 +126,7 @@ export function isFixedPriceGiftCardClaimable(giftCard: Card, rewardAmount: BigN
   return !!priceToValueMap[priceAsKey];
 }
 
-export function getGiftCardValue(giftCard: Card, reward: BigNumberish, exchangeRate?: number) {
+export function getCardValue(giftCard: Card, reward: BigNumberish, exchangeRate?: number) {
   let giftCardValue;
   const amountDaiEth = Number(formatEther(reward)).toFixed(2);
   if (giftCard.denominationType == "FIXED") {

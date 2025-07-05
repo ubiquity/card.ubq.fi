@@ -4,7 +4,7 @@ import { commonHeaders, Context } from "./helpers/types";
 import { validateEnvVars, validateRequestMethod } from "./helpers/validators";
 import { ReloadlyFailureResponse } from "../shared/types/response-types";
 
-export const getGiftCardParams = z.object({
+export const getCardParams = z.object({
   sku: z.coerce.number(),
 });
 
@@ -14,7 +14,7 @@ export async function onRequest(ctx: Context): Promise<Response> {
     validateRequestMethod(ctx.request.method, "GET");
 
     const { searchParams } = new URL(ctx.request.url);
-    const result = getGiftCardParams.safeParse({
+    const result = getCardParams.safeParse({
       sku: searchParams.get("sku"),
     });
     if (!result.success) {

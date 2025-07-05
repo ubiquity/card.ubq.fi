@@ -8,10 +8,10 @@ import { Card, ExchangeRate } from "../shared/types/entity-types";
 import { PostOrderParams, postOrderParamsSchema } from "../shared/types/params-types";
 import { ReloadlyFailureResponse, ReloadlyOrderResponse } from "../shared/types/response-types";
 import { AccessToken, commonHeaders, Context } from "./helpers/types";
-import { giftCardTreasuryAddress, permit2Address, ubiquityDollarAllowedChainIds, ubiquityDollarChainAddresses } from "../shared/constants";
+import { cardTreasuryAddress, permit2Address, ubiquityDollarAllowedChainIds, ubiquityDollarChainAddresses } from "../shared/constants";
 import { getMintMessageToSign } from "../shared/message-signer";
 import { permit2Abi } from "../shared/abis/permit2-abi";
-import { getGiftCardValue, isClaimableForAmount } from "../shared/pricing";
+import { getCardValue, isClaimableForAmount } from "../shared/pricing";
 import { getAccessToken, getReloadlyApiBaseUrl } from "./helpers/shared";
 import { getCardOrderId } from "../shared/abis/helpers";
 import { validateEnvVars, validateRequestMethod } from "./helpers/validators";
@@ -31,10 +31,10 @@ export async function onRequest(ctx: Context): Promise<Response> {
 
     const provider = await useRpcHandler(chainId);
 
-    const [txReceipt, tx, giftCard]: [TransactionReceipt, TransactionResponse, Card] = await Promise.all([
+    const [txReceipt, tx, card]: [TransactionReceipt, TransactionResponse, Card] = await Promise.all([
       provider.getTransactionReceipt(txHash),
       provider.getTransaction(txHash),
-      getGiftCardById(productId, accessToken),
+      getCardById(productId, accessToken),
     ]);
 
     if (!txReceipt) {
@@ -46,7 +46,7 @@ export async function onRequest(ctx: Context): Promise<Response> {
     const txParsed = iface.parseTransaction({ data: tx.data });
     console.log("Parsed transaction data: ", JSON.stringify(txParsed));
 
-    const validationErr = validatePermitTransaction(txParsed, txReceipt, result.data, giftCard);
+    const validationErr = validatePermitTransaction(txParsed, txReceipt, result.data, card);
     if (validationErr) {
       return Response.json({ message: validationErr }, { status: 403 });
     }
@@ -55,19 +55,19 @@ export async function onRequest(ctx: Context): Promise<Response> {
     const orderId = getCardOrderId(txReceipt.from, txHash, retryCount);
 
     let exchangeRate = 1;
-    if (giftCard.recipientCurrencyCode != "USD") {
-      const exchangeRateResponse = await getExchangeRate(1, giftCard.recipientCurrencyCode, accessToken);
+    if (card.recipientCurrencyCode != "USD") {
+      const exchangeRateResponse = await getExchangeRate(1, card.recipientCurrencyCode, accessToken);
       exchangeRate = exchangeRateResponse.senderAmount;
     }
 
-    const giftCardValue = getGiftCardValue(giftCard, amountDaiWei, exchangeRate);
+    const cardValue = getCardValue(card, amountDaiWei, exchangeRate);
 
     const isDuplicate = await isDuplicateOrder(orderId, accessToken);
     if (isDuplicate) {
       return Response.json({ message: "The transaction has already claimed a gift card." }, { status: 400 });
     }
 
-    const order = await orderGiftCard(txReceipt.from.toLowerCase(), productId, giftCardValue, orderId, accessToken);
+    const order = await orderCard(txReceipt.from.toLowerCase(), productId, cardValue, orderId, accessToken);
 
     if (order.status != "REFUNDED" && order.status != "FAILED") {
       return Response.json(order, { status: 200 });
@@ -80,7 +80,7 @@ export async function onRequest(ctx: Context): Promise<Response> {
   }
 }
 
-export async function getGiftCardById(productId: number, accessToken: AccessToken): Promise<Card> {
+export async function getCardById(productId: number, accessToken: AccessToken): Promise<Card> {
   const url = `${getReloadlyApiBaseUrl(accessToken.isSandbox)}/products/${productId}`;
   console.log(`Retrieving gift cards from ${url}`);
   const options = {
@@ -108,13 +108,7 @@ export async function getGiftCardById(productId: number, accessToken: AccessToke
   return responseJson as Card;
 }
 
-async function orderGiftCard(
-  userId: string,
-  productId: number,
-  cardValue: number,
-  identifier: string,
-  accessToken: AccessToken
-): Promise<ReloadlyOrderResponse> {
+async function orderCard(userId: string, productId: number, cardValue: number, identifier: string, accessToken: AccessToken): Promise<ReloadlyOrderResponse> {
   const url = `${getReloadlyApiBaseUrl(accessToken.isSandbox)}/orders`;
   console.log(`Placing order at url: ${url}`);
 
@@ -201,7 +195,7 @@ function validatePermitTransaction(
   txParsed: TransactionDescription,
   txReceipt: TransactionReceipt,
   postOrderParams: PostOrderParams,
-  giftCard: Card
+  card: Card
 ): string | null {
   if (!ubiquityDollarAllowedChainIds.includes(postOrderParams.chainId)) {
     return "Unsupported chain";
@@ -235,7 +229,7 @@ function validatePermitTransaction(
 
   const rewardAmount = txParsed.args.transferDetails.requestedAmount;
 
-  if (!isClaimableForAmount(giftCard, rewardAmount)) {
+  if (!isClaimableForAmount(card, rewardAmount)) {
     return "Your reward amount is either too high or too low to buy this card.";
   }
 
@@ -246,11 +240,11 @@ function validatePermitTransaction(
     return wrongContractErr;
   }
 
-  if (txParsed.args.transferDetails.to.toLowerCase() != giftCardTreasuryAddress.toLowerCase()) {
+  if (txParsed.args.transferDetails.to.toLowerCase() != cardTreasuryAddress.toLowerCase()) {
     console.error(
-      "Given transaction hash is not a token transfer to giftCardTreasuryAddress",
+      "Given transaction hash is not a token transfer to cardTreasuryAddress",
       `txParsed.args.transferDetails.to=${txParsed.args.transferDetails.to}`,
-      `giftCardTreasuryAddress=${giftCardTreasuryAddress}`
+      `cardTreasuryAddress=${cardTreasuryAddress}`
     );
     return wrongContractErr;
   }

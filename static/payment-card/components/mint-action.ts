@@ -1,9 +1,9 @@
 import { ethers } from "ethers";
 import { permit2Abi } from "../../../shared/abis";
 import { getCardOrderId, isCardAvailable } from "../../../shared/abis/helpers";
-import { giftCardTreasuryAddress, permit2Address } from "../../../shared/constants";
+import { cardTreasuryAddress, permit2Address } from "../../../shared/constants";
 import { getMintMessageToSign } from "../../../shared/message-signer";
-import { getGiftCardValue } from "../../../shared/pricing";
+import { getCardValue } from "../../../shared/pricing";
 import { Card } from "../../../shared/types/entity-types";
 import { PostOrderParams } from "../../../shared/types/params-types";
 import { app, AppState } from "../app-state";
@@ -21,7 +21,7 @@ export async function mint(card: Card) {
     throw new Error(`Missing or invalid permit in the URL.`);
   }
 
-  const value = getGiftCardValue(card, activePermit.amount);
+  const value = getCardValue(card, activePermit.amount);
 
   if (!isCardAvailable(card, activePermit.amount)) {
     toaster.create("error", "This payment card is not available in your permit amount.");
@@ -134,7 +134,7 @@ async function claimPermitToCardTreasury(app: AppState) {
     const reward = {
       ...app.reward,
     };
-    reward.beneficiary = giftCardTreasuryAddress;
+    reward.beneficiary = cardTreasuryAddress;
 
     const tx = await transferFromPermit(permit2Contract, reward, "Processing... Please wait. Do not close this page.");
     if (!tx) return;

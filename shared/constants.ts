@@ -5,7 +5,7 @@ export const RELOADLY_PRODUCTION_API_URL = "https://giftcards.reloadly.com";
 export const ubiquityDollarAllowedChainIds = [1, 100, 31337];
 
 export const permit2Address = "0x000000000022D473030F116dDEE9F6B43aC78BA3";
-export const giftCardTreasuryAddress = "0xD51B09ad92e08B962c994374F4e417d4AD435189";
+export const cardTreasuryAddress = "0xD51B09ad92e08B962c994374F4e417d4AD435189";
 
 export const ubiquityDollarChainAddresses: Record<number, string> = {
   1: "0xb6919Ef2ee4aFC163BC954C5678e2BB570c2D103",
