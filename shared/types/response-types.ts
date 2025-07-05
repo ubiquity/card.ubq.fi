@@ -7,7 +7,7 @@ export interface ReloadlyAuthResponse {
   token_type: string;
 }
 
-export interface ReloadlyListGiftCardResponse {
+export interface ReloadlyListCardResponse {
   content: Card[];
   pageable: {
     sort: {

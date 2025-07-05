@@ -1,5 +1,5 @@
 import { BigNumberish, ethers } from "ethers";
-import { isRangePriceGiftCardClaimable } from "../pricing";
+import { isRangePriceCardClaimable } from "../pricing";
 import { Card } from "../types/entity-types";
 
 export function getCardOrderId(wallet: string, txHash: string, retryCount: number) {
@@ -9,5 +9,5 @@ export function getCardOrderId(wallet: string, txHash: string, retryCount: numbe
   return ethers.utils.keccak256(integrityBytes);
 }
 export function isCardAvailable(card: Card, reward: BigNumberish): boolean {
-  return card.denominationType == "RANGE" && isRangePriceGiftCardClaimable(card, reward);
+  return card.denominationType == "RANGE" && isRangePriceCardClaimable(card, reward);
 }
