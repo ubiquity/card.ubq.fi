@@ -1,6 +1,13 @@
 import { BigNumber, BigNumberish } from "ethers";
 import { formatEther, parseEther } from "@ethersproject/units";
-import { PriceToValueMap, Card } from "./types";
+import { Card } from "./types/entity-types";
+
+export interface PriceToValueMap {
+  [key: string]: number;
+}
+export interface ValueToPriceMap {
+  [key: string]: number;
+}
 
 /**
  * PRICE OF A GIFT CARD

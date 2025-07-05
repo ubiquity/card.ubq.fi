@@ -9,11 +9,11 @@ export interface Card {
   discountPercentage: number;
   denominationType: "FIXED" | "RANGE"; // Assuming denominationType can be 'FIXED' or 'RANGE'
   recipientCurrencyCode: string;
-  minRecipientDenomination: number | null;
-  maxRecipientDenomination: number | null;
+  minRecipientDenomination: number;
+  maxRecipientDenomination: number;
   senderCurrencyCode: string;
-  minSenderDenomination: number | null;
-  maxSenderDenomination: number | null;
+  minSenderDenomination: number;
+  maxSenderDenomination: number;
   fixedRecipientDenominations: number[];
   fixedSenderDenominations: number[];
   fixedRecipientToSenderDenominationsMap: {
