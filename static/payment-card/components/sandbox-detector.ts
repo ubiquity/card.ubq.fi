@@ -1,9 +1,8 @@
-import { toaster } from "../common-ui/toaster";
 import { getApiBaseUrl } from "../utils";
 
 export async function notifySandboxCardEnv() {
-  const usingSandbox = isSandbox();
-  if (!usingSandbox) {
+  const isUsingSandbox = await isSandbox();
+  if (!isUsingSandbox) {
     return;
   }
   const cardEnvElement = document.createElement("div");
@@ -16,17 +15,14 @@ export async function notifySandboxCardEnv() {
 }
 
 export async function isSandbox(): Promise<boolean> {
-  const apiUrl = `${getApiBaseUrl()}/get-cards-env`;
+  const apiUrl = `${getApiBaseUrl()}/get-env`;
 
   const response = await fetch(apiUrl);
+  console.log("response.ok", !!response.ok);
 
   if (response.ok) {
     const responseJson = (await response.json()) as { USE_RELOADLY_SANDBOX: boolean };
     return responseJson.USE_RELOADLY_SANDBOX;
   }
-
-  toaster.create("error", "Unable to detect backend environment.");
-  console.error("Unable to detect backend environment.");
-
-  return false;
+  throw new Error(`Failed to detect backend environment.`);
 }

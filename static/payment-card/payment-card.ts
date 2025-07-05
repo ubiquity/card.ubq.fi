@@ -18,8 +18,7 @@ function gridLoadedCallback() {
   document.body.classList.add("grid-loaded");
 }
 
-notifySandboxCardEnv().catch(console.error);
-readClaimDataFromUrl(app)
+Promise.all([notifySandboxCardEnv(), readClaimDataFromUrl(app)])
   .then(init)
   .catch((e) => {
     console.error(e);
