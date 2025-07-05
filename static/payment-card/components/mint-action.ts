@@ -16,19 +16,10 @@ import { getApiBaseUrl, getUserCountryCode } from "../utils";
 import { checkPermitClaimable, transferFromPermit } from "../web3/erc20-permit";
 
 export async function mint(card: Card) {
-  const country = await getUserCountryCode();
-  if (!country) {
-    toaster.create("error", "Failed to detect your location to pick a suitable card for you.");
-    return;
-  }
-
   const activePermit = app.claims[0];
   if (!activePermit) {
-    toaster.create("error", "Missing or invalid permit in the URL.");
-    return;
+    throw new Error(`Missing or invalid permit in the URL.`);
   }
-
-  console.log("activePermit", activePermit);
 
   const value = getGiftCardValue(card, activePermit.amount);
 
@@ -63,7 +54,7 @@ export async function mintWithPermit(giftCard: Card) {
     return;
   }
 
-  const pendingOrder = await getPendingOrder(app.reward.nonce.toString());
+  const pendingOrder = await getPendingOrder(app.reward.nonce);
 
   console.log("Pending order of product:", pendingOrder);
   let tx, txHash;
@@ -83,7 +74,7 @@ export async function mintWithPermit(giftCard: Card) {
     retryCount: pendingOrder && pendingOrder.retryCount ? pendingOrder.retryCount + 1 : 1,
   };
 
-  await updatePendingOrder(app.reward.nonce.toString(), mintParams);
+  await updatePendingOrder(app.reward.nonce, mintParams);
 
   if (tx) {
     await tx.wait();
@@ -107,8 +98,9 @@ export async function mintWithPermit(giftCard: Card) {
     toaster.create("error", "Order failed. Try again in a few minutes.");
     return;
   }
-  toaster.create("success", `Success. Your gift card will be available for redeem in your cards in a few minutes.`);
+
   await checkForMintingDelay(mintParams, order.transactionId);
+  toaster.create("success", `Success. Minting has completed.`);
 }
 
 async function checkForMintingDelay(mintParams: MintParams, txId: number) {
@@ -134,7 +126,7 @@ async function claimPermitToCardTreasury(app: AppState) {
     return;
   }
   const isClaimable = await checkPermitClaimable(app);
-  console.log("isClaimable", isClaimable);
+
   if (isClaimable) {
     const permit2Contract = new ethers.Contract(permit2Address, permit2Abi, app.signer);
     if (!permit2Contract) return;

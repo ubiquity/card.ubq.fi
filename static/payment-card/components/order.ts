@@ -2,7 +2,7 @@ import { getCardOrderId } from "../../../shared/abis/helpers";
 import { CompletedOrder } from "../../../shared/types/order-types";
 import { getOrderTransaction } from "../services/backend-calls";
 import { getConnectedWallet } from "../utils";
-import { attachRevealAction } from "./reveal-action";
+import { attachRevealAction } from "./redeem-code";
 
 const html = String.raw;
 

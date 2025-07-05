@@ -1,9 +1,9 @@
-import { MintParams } from "../types";
-import { CompletedOrder, PendingOrder } from "../../../shared/types/order-types";
-import { getConnectedWallet } from "../utils";
 import { BigNumberish } from "ethers";
+import { CompletedOrder, PendingOrder } from "../../../shared/types/order-types";
+import { MintParams } from "../types";
+import { getConnectedWallet } from "../utils";
 
-export async function updatePendingOrder(permitNonce: string, mintArgs: MintParams) {
+export async function updatePendingOrder(permitNonce: BigNumberish, mintArgs: MintParams) {
   try {
     const wallet = await getConnectedWallet();
 
@@ -11,14 +11,14 @@ export async function updatePendingOrder(permitNonce: string, mintArgs: MintPara
     if (pendingOrders) {
       const pendingOrdersParsed = JSON.parse(pendingOrders);
 
-      pendingOrdersParsed[wallet][permitNonce] = { ...mintArgs };
+      pendingOrdersParsed[wallet][permitNonce.toString()] = { ...mintArgs };
       localStorage.setItem("pendingOrders", JSON.stringify(pendingOrdersParsed));
     } else {
       localStorage.setItem(
         "pendingOrders",
         JSON.stringify({
           [wallet]: {
-            [permitNonce]: { ...mintArgs },
+            [permitNonce.toString()]: { ...mintArgs },
           },
         })
       );
@@ -28,13 +28,13 @@ export async function updatePendingOrder(permitNonce: string, mintArgs: MintPara
   }
 }
 
-export async function getPendingOrder(permitNonce: string): Promise<PendingOrder | null> {
+export async function getPendingOrder(permitNonce: BigNumberish): Promise<PendingOrder | null> {
   try {
     const wallet = await getConnectedWallet();
     const pendingOrders = localStorage.getItem("pendingOrders");
     if (!pendingOrders) return null;
     const pendingOrdersParsed = JSON.parse(pendingOrders);
-    return pendingOrdersParsed[wallet][permitNonce] || null;
+    return pendingOrdersParsed[wallet][permitNonce.toString()] || null;
   } catch (error) {
     console.error(error);
     return null;
