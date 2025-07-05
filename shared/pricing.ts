@@ -1,6 +1,6 @@
 import { BigNumber, BigNumberish } from "ethers";
 import { formatEther, parseEther } from "@ethersproject/units";
-import { PriceToValueMap, GiftCard } from "./types";
+import { PriceToValueMap, Card } from "./types";
 
 /**
  * PRICE OF A GIFT CARD
@@ -30,7 +30,7 @@ import { PriceToValueMap, GiftCard } from "./types";
  * Values of GiftCard.fixedRecipientToSenderDenominationsMap{}[]
  */
 
-export function isClaimableForAmount(giftCard: GiftCard, rewardAmount: BigNumberish) {
+export function isClaimableForAmount(giftCard: Card, rewardAmount: BigNumberish) {
   if (giftCard.senderCurrencyCode != "USD") {
     throw new Error(`Failed to validate price because gift card's senderCurrencyCode is not USD: ${JSON.stringify({ rewardAmount, giftCard: giftCard })}`);
   }
@@ -42,7 +42,7 @@ export function isClaimableForAmount(giftCard: GiftCard, rewardAmount: BigNumber
   }
 }
 
-export function getEstimatedExchangeRate(giftCard: GiftCard) {
+export function getEstimatedExchangeRate(giftCard: Card) {
   let exchangeRate = 1;
   if (giftCard.recipientCurrencyCode != "USD") {
     if (giftCard.denominationType == "FIXED") {
@@ -55,7 +55,7 @@ export function getEstimatedExchangeRate(giftCard: GiftCard) {
   return exchangeRate;
 }
 
-export function getTotalPriceOfValue(value: number, giftCard: GiftCard) {
+export function getTotalPriceOfValue(value: number, giftCard: Card) {
   const exchangeRate = getEstimatedExchangeRate(giftCard);
   const usdValue = parseEther((exchangeRate * value).toString());
 
@@ -70,7 +70,7 @@ export function getTotalPriceOfValue(value: number, giftCard: GiftCard) {
   return Number(formatEther(usdValue.add(totalFee).sub(discount)));
 }
 
-export function getRangePriceToValueMap(giftCard: GiftCard) {
+export function getRangePriceToValueMap(giftCard: Card) {
   const priceToValueMap: PriceToValueMap = {};
 
   [giftCard.minRecipientDenomination, giftCard.maxRecipientDenomination].forEach((value) => {
@@ -81,7 +81,7 @@ export function getRangePriceToValueMap(giftCard: GiftCard) {
   return priceToValueMap;
 }
 
-export function getUsdValueForRangePrice(giftCard: GiftCard, price: BigNumberish) {
+export function getUsdValueForRangePrice(giftCard: Card, price: BigNumberish) {
   // price = value + senderFee + feePercent - discountPercent
   const priceWei = BigNumber.from(price.toString());
   const priceAfterFee = priceWei.sub(parseEther(giftCard.senderFee.toString()));
@@ -96,12 +96,12 @@ export function getUsdValueForRangePrice(giftCard: GiftCard, price: BigNumberish
   return Number(formatEther(usdValue));
 }
 
-export function isRangePriceGiftCardClaimable(giftCard: GiftCard, rewardAmount: BigNumberish) {
+export function isRangePriceGiftCardClaimable(giftCard: Card, rewardAmount: BigNumberish) {
   const value = getGiftCardValue(giftCard, rewardAmount);
   return value >= giftCard.minRecipientDenomination && value <= giftCard.maxRecipientDenomination;
 }
 
-export function getFixedPriceToValueMap(giftCard: GiftCard) {
+export function getFixedPriceToValueMap(giftCard: Card) {
   const valueToPriceMap = giftCard.fixedRecipientToSenderDenominationsMap;
 
   const priceToValueMap: PriceToValueMap = {};
@@ -113,13 +113,13 @@ export function getFixedPriceToValueMap(giftCard: GiftCard) {
   return priceToValueMap;
 }
 
-export function isFixedPriceGiftCardClaimable(giftCard: GiftCard, rewardAmount: BigNumberish) {
+export function isFixedPriceGiftCardClaimable(giftCard: Card, rewardAmount: BigNumberish) {
   const priceToValueMap = getFixedPriceToValueMap(giftCard);
   const priceAsKey = Number(formatEther(rewardAmount)).toFixed(2).toString();
   return !!priceToValueMap[priceAsKey];
 }
 
-export function getGiftCardValue(giftCard: GiftCard, reward: BigNumberish, exchangeRate?: number) {
+export function getGiftCardValue(giftCard: Card, reward: BigNumberish, exchangeRate?: number) {
   let giftCardValue;
   const amountDaiEth = Number(formatEther(reward)).toFixed(2);
   if (giftCard.denominationType == "FIXED") {

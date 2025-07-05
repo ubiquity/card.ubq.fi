@@ -1,5 +1,5 @@
 import { env } from "cloudflare:test";
-import { Context } from "../../functions/utils/types";
+import { Context } from "../../functions/helpers/types";
 
 export const TESTS_BASE_URL = "https://localhost";
 

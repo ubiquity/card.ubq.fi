@@ -4,7 +4,7 @@ import { http, HttpResponse } from "msw";
 import { setupServer, SetupServerApi } from "msw/node";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { onRequest as pagesFunction } from "../../functions/get-best-card";
-import { RELOADLY_PRODUCTION_API_URL } from "../../functions/utils/shared";
+import { RELOADLY_PRODUCTION_API_URL } from "../../functions/helpers/shared";
 import bestCard from "../fixtures/get-best-card/best-card-sandbox.json";
 import card18597 from "../fixtures/get-best-card/card-18597.json";
 import card18732 from "../fixtures/get-best-card/card-18732.json";

@@ -1,11 +1,12 @@
 import { verifyMessage } from "@ethersproject/wallet";
-import { getRedeemCodeParamsSchema } from "../shared/api-types";
-import { getGiftCardOrderId, getRevealMessageToSign } from "../shared/helpers";
 import { RedeemCode } from "../shared/types";
-import { fetchIndividualTransactions } from "./my-cards";
-import { commonHeaders, getAccessToken, getReloadlyApiBaseUrl } from "./utils/shared";
-import { AccessToken, Context, ReloadlyFailureResponse, ReloadlyRedeemCodeResponse } from "./utils/types";
-import { validateEnvVars, validateRequestMethod } from "./utils/validators";
+import { OrderTransaction } from "../shared/types/entity-types";
+import { getRedeemCodeParamsSchema } from "../shared/types/params-types";
+import { ReloadlyFailureResponse, ReloadlyRedeemCodeResponse } from "../shared/types/response-types";
+import { AccessToken, commonHeaders, Context } from "./helpers/types";
+import { getRevealMessageToSign } from "../shared/message-signer";
+import { getAccessToken, getGiftCardOrderId, getReloadlyApiBaseUrl } from "./helpers/shared";
+import { validateEnvVars, validateRequestMethod } from "./helpers/validators";
 
 export async function onRequest(ctx: Context): Promise<Response> {
   try {
@@ -95,4 +96,50 @@ export async function getRedeemCode(transactionId: number, accessToken: AccessTo
   console.log(`Response from ${url}`, responseJson);
 
   return responseJson as ReloadlyRedeemCodeResponse;
+}
+
+export async function fetchIndividualTransactions(
+  transactionIds: number[],
+  accessToken: AccessToken
+): Promise<{ foundTransactions: OrderTransaction[]; failedFetches: { id: number; status: string; message: string }[] }> {
+  console.log(`Attempting to retrieve individual gift cards for IDs: ${transactionIds.join(", ")} from Reloadly API`);
+
+  const fetchPromises = transactionIds.map((id) => {
+    const url = `${getReloadlyApiBaseUrl(accessToken.isSandbox)}/reports/transactions/${id}`;
+    console.log(`Fetching transaction ${id} from ${url}`);
+    return fetch(url, {
+      method: "GET",
+      headers: {
+        ...commonHeaders,
+        Authorization: `Bearer ${accessToken.token}`,
+      },
+    });
+  });
+
+  const results = await Promise.allSettled(fetchPromises);
+
+  const foundTransactions: OrderTransaction[] = [];
+  const failedFetches: { id: number; status: string; message: string }[] = [];
+
+  for (let i = 0; i < results.length; i++) {
+    const transactionId = transactionIds[i];
+    const result = results[i];
+
+    if (result.status === "fulfilled") {
+      const response = result.value;
+      const responseJson = await response.json();
+
+      if (response.ok) {
+        foundTransactions.push(responseJson as OrderTransaction);
+      } else {
+        const errorMessage = (responseJson as ReloadlyFailureResponse).message || "Unknown error";
+        failedFetches.push({ id: transactionId, status: response.status.toString(), message: errorMessage });
+        console.warn(`Failed to retrieve transaction ${transactionId} (Status: ${response.status}): ${errorMessage}`);
+      }
+    } else {
+      failedFetches.push({ id: transactionId, status: "Network Error", message: result.reason.message || "Unknown network error" });
+      console.error(`Network error for transaction ${transactionId}:`, result.reason);
+    }
+  }
+  return { foundTransactions, failedFetches };
 }

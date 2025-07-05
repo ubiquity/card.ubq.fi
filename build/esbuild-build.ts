@@ -5,19 +5,19 @@ import { appendFileSync, readFileSync, writeFileSync } from "fs";
 
 // CSS files in order
 const cssFiles: string[] = [
-  "static/styles/rewards/pay.css",
-  "static/styles/rewards/background.css",
+  "static/styles/payment-card/pay.css",
+  "static/styles/payment-card/background.css",
   "static/styles/toast.css",
   "static/styles/loader.css",
-  "static/styles/rewards/gift-cards.css",
-  "static/styles/rewards/media-queries.css",
-  "static/styles/rewards/light-mode.css",
+  "static/styles/payment-card/gift-cards.css",
+  "static/styles/payment-card/media-queries.css",
+  "static/styles/payment-card/light-mode.css",
 ];
 
 // Output bundles file
 const outputFilePath = "static/out/bundles.css";
 
-const typescriptEntries = ["static/scripts/rewards/init.ts"];
+const typescriptEntries = ["static/payment-card/payment-card.ts"];
 export const entries = [...typescriptEntries];
 
 export const esBuildContext: esbuild.BuildOptions = {

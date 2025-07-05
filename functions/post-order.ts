@@ -2,18 +2,18 @@ import { Interface, TransactionDescription } from "@ethersproject/abi";
 import { TransactionReceipt, TransactionResponse } from "@ethersproject/providers";
 import { verifyMessage } from "@ethersproject/wallet";
 import { BigNumber } from "ethers";
-import { isGeoRestricted } from "../shared/allowed-country-list";
-import { giftCardTreasuryAddress, permit2Address, ubiquityDollarAllowedChainIds, ubiquityDollarChainAddresses } from "../shared/constants";
-import { getGiftCardOrderId, getMintMessageToSign } from "../shared/helpers";
-import { getGiftCardValue, isClaimableForAmount } from "../shared/pricing";
-import { ExchangeRate, GiftCard } from "../shared/types";
-import { useRpcHandler } from "../shared/use-rpc-handler";
-import { permit2Abi } from "../static/scripts/rewards/abis/permit2-abi";
+import { useRpcHandler } from "../static/payment-card/services/use-rpc-handler";
 import { getTransactionFromOrderId } from "./get-order";
-import { commonHeaders, getAccessToken, getReloadlyApiBaseUrl } from "./utils/shared";
-import { AccessToken, Context, ReloadlyFailureResponse, ReloadlyOrderResponse } from "./utils/types";
-import { validateEnvVars, validateRequestMethod } from "./utils/validators";
-import { PostOrderParams, postOrderParamsSchema } from "../shared/api-types";
+import { Card, ExchangeRate } from "../shared/types/entity-types";
+import { PostOrderParams, postOrderParamsSchema } from "../shared/types/params-types";
+import { ReloadlyFailureResponse, ReloadlyOrderResponse } from "../shared/types/response-types";
+import { AccessToken, commonHeaders, Context } from "./helpers/types";
+import { giftCardTreasuryAddress, permit2Address, ubiquityDollarAllowedChainIds, ubiquityDollarChainAddresses } from "../shared/constants";
+import { getMintMessageToSign } from "../shared/message-signer";
+import { permit2Abi } from "../shared/abis/permit2-abi";
+import { getGiftCardValue, isClaimableForAmount } from "../shared/pricing";
+import { getAccessToken, getGiftCardOrderId, getReloadlyApiBaseUrl } from "./helpers/shared";
+import { validateEnvVars, validateRequestMethod } from "./helpers/validators";
 
 export async function onRequest(ctx: Context): Promise<Response> {
   try {
@@ -26,11 +26,11 @@ export async function onRequest(ctx: Context): Promise<Response> {
     if (!result.success) {
       throw new Error(`Invalid post parameters: ${JSON.stringify(result.error.errors)}`);
     }
-    const { productId, txHash, chainId, country, retryCount } = result.data;
+    const { productId, txHash, chainId, retryCount } = result.data;
 
     const provider = await useRpcHandler(chainId);
 
-    const [txReceipt, tx, giftCard]: [TransactionReceipt, TransactionResponse, GiftCard] = await Promise.all([
+    const [txReceipt, tx, giftCard]: [TransactionReceipt, TransactionResponse, Card] = await Promise.all([
       provider.getTransactionReceipt(txHash),
       provider.getTransaction(txHash),
       getGiftCardById(productId, accessToken),
@@ -58,9 +58,6 @@ export async function onRequest(ctx: Context): Promise<Response> {
       const exchangeRateResponse = await getExchangeRate(1, giftCard.recipientCurrencyCode, accessToken);
       exchangeRate = exchangeRateResponse.senderAmount;
     }
-    if (isGeoRestricted(productId, country)) {
-      throw new Error(`Product ID ${productId} is not supported for country ${country}.`);
-    }
 
     const giftCardValue = getGiftCardValue(giftCard, amountDaiWei, exchangeRate);
 
@@ -82,7 +79,7 @@ export async function onRequest(ctx: Context): Promise<Response> {
   }
 }
 
-export async function getGiftCardById(productId: number, accessToken: AccessToken): Promise<GiftCard> {
+export async function getGiftCardById(productId: number, accessToken: AccessToken): Promise<Card> {
   const url = `${getReloadlyApiBaseUrl(accessToken.isSandbox)}/products/${productId}`;
   console.log(`Retrieving gift cards from ${url}`);
   const options = {
@@ -107,7 +104,7 @@ export async function getGiftCardById(productId: number, accessToken: AccessToke
   console.log("response.status", response.status);
   console.log(`Response from ${url}`, responseJson);
 
-  return responseJson as GiftCard;
+  return responseJson as Card;
 }
 
 async function orderGiftCard(
@@ -203,7 +200,7 @@ function validatePermitTransaction(
   txParsed: TransactionDescription,
   txReceipt: TransactionReceipt,
   postOrderParams: PostOrderParams,
-  giftCard: GiftCard
+  giftCard: Card
 ): string | null {
   if (!ubiquityDollarAllowedChainIds.includes(postOrderParams.chainId)) {
     return "Unsupported chain";

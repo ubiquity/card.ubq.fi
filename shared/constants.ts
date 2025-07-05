@@ -1,3 +1,7 @@
+export const RELOADLY_AUTH_URL = "https://auth.reloadly.com/oauth/token";
+export const RELOADLY_SANDBOX_API_URL = "https://giftcards-sandbox.reloadly.com";
+export const RELOADLY_PRODUCTION_API_URL = "https://giftcards.reloadly.com";
+
 export const ubiquityDollarAllowedChainIds = [1, 100, 31337];
 
 export const permit2Address = "0x000000000022D473030F116dDEE9F6B43aC78BA3";

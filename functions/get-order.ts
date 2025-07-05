@@ -1,8 +1,9 @@
-import { getOrderParamsSchema } from "../shared/api-types";
-import { OrderTransaction } from "../shared/types";
-import { commonHeaders, getAccessToken, getReloadlyApiBaseUrl } from "./utils/shared";
-import { AccessToken, Context, ReloadlyFailureResponse, ReloadlyGetTransactionResponse } from "./utils/types";
-import { validateEnvVars, validateRequestMethod } from "./utils/validators";
+import { getAccessToken, getReloadlyApiBaseUrl } from "./helpers/shared";
+import { ReloadlyFailureResponse, ReloadlyGetTransactionResponse } from "../shared/types/response-types";
+import { validateEnvVars, validateRequestMethod } from "./helpers/validators";
+import { AccessToken, commonHeaders, Context } from "./helpers/types";
+import { getOrderParamsSchema } from "../shared/types/params-types";
+import { OrderTransaction } from "../shared/types/entity-types";
 
 export async function onRequest(ctx: Context): Promise<Response> {
   try {

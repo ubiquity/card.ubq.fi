@@ -12,7 +12,7 @@ import transaction0x33f4 from "./get-redeem-code/transaction-0x33f4.json";
 import card from "./get-redeem-code/card.json";
 import orderCard13959 from "./post-order/order-card-13959.json";
 import orderCard18732 from "./post-order/order-card-18732.json";
-import { RELOADLY_AUTH_URL, RELOADLY_PRODUCTION_API_URL, RELOADLY_SANDBOX_API_URL } from "../../functions/utils/shared";
+import { RELOADLY_AUTH_URL, RELOADLY_PRODUCTION_API_URL, RELOADLY_SANDBOX_API_URL } from "../../functions/helpers/shared";
 
 /**
  * Intercepts the routes and returns a custom payload
