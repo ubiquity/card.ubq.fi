@@ -23,18 +23,11 @@
     "format:prettier": "prettier --write .",
     "format:cspell": "cspell **/*",
     "postinstall": "git submodule update --init --recursive",
-    "test:anvil": "ganache --fork.url \"https://rpc.gnosischain.com\" --wallet.mnemonic \"test test test test test test test test test test test junk\" --wallet.unlockedAccounts \"0x9051eDa96dB419c967189F4Ac303a290F3327680\" --chain.chainId 31337 --logging.verbose true",
-    "test:start": "yarn start",
-    "test:run": "cypress run",
-    "test:open": "cypress open",
-    "test:fund": "tsx cypress/scripts/fund-ganache.ts",
-    "test:unit": "npx vitest run",
+    "ganache:start": "ganache --fork.url \"https://rpc.gnosischain.com\" --wallet.mnemonic \"test test test test test test test test test test test junk\" --wallet.unlockedAccounts \"0x9051eDa96dB419c967189F4Ac303a290F3327680\" --chain.chainId 31337 --logging.verbose true",
+    "ganache:fund": "tsx scripts/typescript/fund-ganache.ts",
     "knip": "knip --config .github/knip.ts",
     "knip-ci": "knip --no-exit-code --reporter json --config .github/knip.ts",
-    "prepare": "husky install",
-    "test": "jest --setupFiles dotenv/config --coverage",
-    "cy:open": "cypress open",
-    "cy:run": "cypress run"
+    "prepare": "husky install"
   },
   "keywords": [
     "typescript",
