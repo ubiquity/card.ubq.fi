@@ -4,10 +4,21 @@ import { Card } from "../../../shared/types/entity-types";
 import { OpenRouterCardPromptResponse } from "../types";
 import { allCountries } from "./countries";
 
-export async function getSuitableCard(cards: Card[], countryCode: string, amount: BigNumberish): Promise<Card | null> {
+declare const OPENROUTER_API_KEY: string;
+
+export async function pickSuitableCards(cards: Card[], countryCode: string, amount: BigNumberish): Promise<Card | null> {
   const filteredCards = cards.filter((card) => {
     return card.status === "ACTIVE" && isCardAvailable(card, amount);
   });
+
+  const oldSuitableCards = localStorage.getItem("suitableCards");
+  if (oldSuitableCards) {
+    const oldCards: number[] = JSON.parse(oldSuitableCards);
+    const pickedCard = filteredCards.find((card) => oldCards.includes(card.productId));
+    if (pickedCard) {
+      return pickedCard;
+    }
+  }
 
   const minInfoCards = filteredCards.map((card) => {
     return {
@@ -29,7 +40,7 @@ export async function getSuitableCard(cards: Card[], countryCode: string, amount
   const aiResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
     headers: {
-      Authorization: "Bearer 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",
+      Authorization: `Bearer ${OPENROUTER_API_KEY}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
@@ -56,6 +67,8 @@ export async function getSuitableCard(cards: Card[], countryCode: string, amount
   console.log("aiResponseJson:", aiResponseJson);
   const suitableCards = await JSON.parse(aiResponseJson.choices[0].message.content);
   console.log("suitableCards:", suitableCards);
+
+  localStorage.setItem("suitableCards", JSON.stringify(suitableCards));
 
   if (suitableCards.length) {
     return cards.find((card) => card.productId == suitableCards[0]) || null;
