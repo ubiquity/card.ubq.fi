@@ -29,16 +29,14 @@ export async function updatePendingOrder(permitNonce: BigNumberish, mintArgs: Mi
 }
 
 export async function getPendingOrder(permitNonce: BigNumberish): Promise<PendingOrder | null> {
-  try {
-    const wallet = await getConnectedWallet();
-    const pendingOrders = localStorage.getItem("pendingOrders");
-    if (!pendingOrders) return null;
-    const pendingOrdersParsed = JSON.parse(pendingOrders);
-    return pendingOrdersParsed[wallet][permitNonce.toString()] || null;
-  } catch (error) {
-    console.error(error);
-    return null;
+  const wallet = await getConnectedWallet();
+  const pendingOrders = localStorage.getItem("pendingOrders");
+  if (!pendingOrders) return null;
+  const pendingOrdersParsed = JSON.parse(pendingOrders);
+  if (pendingOrdersParsed[wallet] && pendingOrdersParsed[wallet][permitNonce.toString()]) {
+    return pendingOrdersParsed[wallet][permitNonce.toString()];
   }
+  return null;
 }
 
 export async function completeOrder(permitNonce: string, txId: number) {
@@ -74,5 +72,8 @@ export async function getCompletedOrder(permitNonce: BigNumberish) {
   const wallet = await getConnectedWallet();
   const completedOrdersString = localStorage.getItem("completedOrders");
   const completedOrdersParsed = completedOrdersString ? JSON.parse(completedOrdersString) : {};
-  return (completedOrdersParsed[wallet][permitNonce.toString()] as CompletedOrder) || null;
+  if (completedOrdersParsed[wallet] && completedOrdersParsed[wallet][permitNonce.toString()]) {
+    return completedOrdersParsed[wallet][permitNonce.toString()] as CompletedOrder;
+  }
+  return null;
 }
