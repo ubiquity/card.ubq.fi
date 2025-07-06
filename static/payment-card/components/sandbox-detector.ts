@@ -21,8 +21,8 @@ export async function isSandbox(): Promise<boolean> {
   console.log("response.ok", !!response.ok);
 
   if (response.ok) {
-    const responseJson = (await response.json()) as { USE_RELOADLY_SANDBOX: boolean };
-    return responseJson.USE_RELOADLY_SANDBOX;
+    const responseJson = (await response.json()) as { USE_RELOADLY_SANDBOX: string };
+    return JSON.parse(responseJson.USE_RELOADLY_SANDBOX);
   }
   throw new Error(`Failed to detect backend environment.`);
 }
