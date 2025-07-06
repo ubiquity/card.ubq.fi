@@ -31,6 +31,8 @@ export async function getSuitableCard(): Promise<Card> {
 }
 
 export function createCardHtml(card: Card, price: BigNumberish): string {
+  const urlParams = new URLSearchParams(window.location.search);
+
   return html`
     <div class="summary">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -46,7 +48,7 @@ export function createCardHtml(card: Card, price: BigNumberish): string {
         </defs>
       </svg>
 
-      <div id="card-name"><a href="/#/sku/${card.productId}" target="_blank">${card.brand.brandName}</a></div>
+      <div id="card-name"><a href="/?claim=${urlParams.get("claim")}#/sku/${card.productId}" target="_blank">${card.brand.brandName}</a></div>
       <div id="mint" class="mint" data-product-id="${card.productId}">
         <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
           <path
