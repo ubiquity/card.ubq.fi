@@ -9,9 +9,8 @@ const cssFiles: string[] = [
   "static/styles/payment-card/background.css",
   "static/styles/toast.css",
   "static/styles/loader.css",
-  "static/styles/payment-card/gift-cards.css",
+  "static/styles/payment-card/card.css",
   "static/styles/payment-card/media-queries.css",
-  "static/styles/payment-card/light-mode.css",
 ];
 
 // Output bundles file
