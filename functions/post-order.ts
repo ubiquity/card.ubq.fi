@@ -63,6 +63,7 @@ export async function onRequest(ctx: Context): Promise<Response> {
     const cardValue = getCardValue(card, amountDaiWei, exchangeRate);
 
     const isDuplicate = await isDuplicateOrder(orderId, accessToken);
+    console.log("isDuplicate:", isDuplicate);
     if (isDuplicate) {
       return Response.json({ message: "The transaction has already claimed a gift card." }, { status: 400 });
     }
