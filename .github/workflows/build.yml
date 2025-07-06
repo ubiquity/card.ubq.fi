@@ -31,6 +31,7 @@ jobs:
           SUPABASE_URL: "https://wfzpewmlyiozupulbuur.supabase.co"
           SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndmenBld21seWlvenVwdWxidXVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE2OTU2NzQzMzksImV4cCI6MjAxMTI1MDMzOX0.SKIL3Q0NOBaMehH0ekFspwgcu3afp3Dl9EDzPqs1nKs"
           BACKEND_URL: ""
+          OPENROUTER_API_KEY: "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"
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
