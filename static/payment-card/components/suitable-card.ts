@@ -5,6 +5,8 @@ import { Card } from "../../../shared/types/entity-types";
 import { getCards } from "../services/backend-calls";
 import { getUserCountryCode } from "../utils";
 import { mint } from "./mint-action";
+import { pickSuitableCards } from "../services/ai";
+import { app } from "../app-state";
 
 const html = String.raw;
 
@@ -19,10 +21,10 @@ export async function getSuitableCard(): Promise<Card> {
     throw new Error(`No cards available at the moment. Check later.`);
   }
 
-  const card = await getSuitableCard();
+  const card = await pickSuitableCards(cards, countryCode, app.reward.amount);
 
   if (!card) {
-    throw new Error(`No cards available for your permit in the ${ct.getCountry(countryCode)}.`);
+    throw new Error(`No cards available for your permit in the ${ct.getCountry(countryCode)?.name}.`);
   }
 
   return card;
