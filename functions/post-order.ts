@@ -2,18 +2,17 @@ import { Interface, TransactionDescription } from "@ethersproject/abi";
 import { TransactionReceipt, TransactionResponse } from "@ethersproject/providers";
 import { verifyMessage } from "@ethersproject/wallet";
 import { BigNumber } from "ethers";
-import { useRpcHandler } from "../static/payment-card/services/use-rpc-handler";
-import { getTransactionFromOrderId } from "./get-order";
+import { getCardOrderId } from "../shared/abis/helpers";
+import { permit2Abi } from "../shared/abis/permit2-abi";
+import { cardTreasuryAddress, permit2Address, ubiquityDollarAllowedChainIds, ubiquityDollarChainAddresses } from "../shared/constants";
+import { getMintMessageToSign } from "../shared/message-signer";
+import { getCardValue, isClaimableForAmount } from "../shared/pricing";
 import { Card, ExchangeRate } from "../shared/types/entity-types";
 import { PostOrderParams, postOrderParamsSchema } from "../shared/types/params-types";
 import { ReloadlyFailureResponse, ReloadlyOrderResponse } from "../shared/types/response-types";
-import { AccessToken, commonHeaders, Context } from "./helpers/types";
-import { cardTreasuryAddress, permit2Address, ubiquityDollarAllowedChainIds, ubiquityDollarChainAddresses } from "../shared/constants";
-import { getMintMessageToSign } from "../shared/message-signer";
-import { permit2Abi } from "../shared/abis/permit2-abi";
-import { getCardValue, isClaimableForAmount } from "../shared/pricing";
+import { useRpcHandler } from "../static/payment-card/services/use-rpc-handler";
 import { getAccessToken, getReloadlyApiBaseUrl } from "./helpers/shared";
-import { getCardOrderId } from "../shared/abis/helpers";
+import { AccessToken, commonHeaders, Context } from "./helpers/types";
 import { validateEnvVars, validateRequestMethod } from "./helpers/validators";
 
 export async function onRequest(ctx: Context): Promise<Response> {
@@ -62,7 +61,7 @@ export async function onRequest(ctx: Context): Promise<Response> {
 
     const cardValue = getCardValue(card, amountDaiWei, exchangeRate);
 
-    const isDuplicate = await isDuplicateOrder(orderId, accessToken);
+    const isDuplicate = await isDuplicateOrder(txHash, ctx);
     console.log("isDuplicate:", isDuplicate);
     if (isDuplicate) {
       return Response.json({ message: "The transaction has already claimed a gift card." }, { status: 400 });
@@ -71,6 +70,7 @@ export async function onRequest(ctx: Context): Promise<Response> {
     const order = await orderCard(txReceipt.from.toLowerCase(), productId, cardValue, orderId, accessToken);
 
     if (order.status != "REFUNDED" && order.status != "FAILED") {
+      await ctx.env.KV_CONSUMED_TX_HASHES.put(txHash.toLowerCase(), order.transactionId.toString());
       return Response.json(order, { status: 200 });
     } else {
       throw new Error(`Order failed: ${JSON.stringify(order)}`);
@@ -155,13 +155,8 @@ async function orderCard(userId: string, productId: number, cardValue: number, i
   return responseJson as ReloadlyOrderResponse;
 }
 
-async function isDuplicateOrder(orderId: string, accessToken: AccessToken): Promise<boolean> {
-  try {
-    const transaction = await getTransactionFromOrderId(orderId, accessToken);
-    return !!transaction.transactionId;
-  } catch (error) {
-    return false;
-  }
+async function isDuplicateOrder(txHash: string, ctx: Context): Promise<boolean> {
+  return !!(await ctx.env.KV_CONSUMED_TX_HASHES.get(txHash.toLowerCase()));
 }
 
 async function getExchangeRate(usdAmount: number, fromCurrency: string, accessToken: AccessToken): Promise<ExchangeRate> {

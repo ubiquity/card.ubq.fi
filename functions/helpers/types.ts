@@ -7,6 +7,7 @@ export interface Env {
   USE_RELOADLY_SANDBOX: string;
   RELOADLY_API_CLIENT_ID: string;
   RELOADLY_API_CLIENT_SECRET: string;
+  KV_CONSUMED_TX_HASHES: KVNamespace;
 }
 
 export interface AccessToken {
