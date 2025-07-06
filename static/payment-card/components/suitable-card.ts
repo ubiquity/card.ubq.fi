@@ -4,7 +4,6 @@ import { getCardValue } from "../../../shared/pricing";
 import { Card } from "../../../shared/types/entity-types";
 import { getCards } from "../services/backend-calls";
 import { getUserCountryCode } from "../utils";
-import { dummyCardSandbox } from "./dummy-card";
 import { mint } from "./mint-action";
 
 const html = String.raw;
@@ -20,7 +19,7 @@ export async function getSuitableCard(): Promise<Card> {
     throw new Error(`No cards available at the moment. Check later.`);
   }
 
-  const card = dummyCardSandbox as unknown as Card; //await getSuitableCard(cards, countryCode, reward);
+  const card = await getSuitableCard();
 
   if (!card) {
     throw new Error(`No cards available for your permit in the ${ct.getCountry(countryCode)}.`);
