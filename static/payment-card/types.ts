@@ -5,6 +5,7 @@ export interface OpenRouterCardPromptResponse {
   object: string;
   created: number;
   choices: Array<{
+    // cSpell:ignore logprobs
     logprobs: null;
     finish_reason: string;
     native_finish_reason: string;
