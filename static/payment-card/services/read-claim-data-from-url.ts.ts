@@ -52,7 +52,6 @@ export async function checkNetwork(app: AppState) {
     const currentNetworkId = parseInt(await window.ethereum.request({ method: "eth_chainId" }), 16);
 
     const appId = app.networkId ?? app.reward.networkId;
-    alert(getNetworkName(String(appId) as NetworkId));
 
     if (currentNetworkId !== appId) {
       console.warn(`Incorrect network. Expected ${appId}, but got ${currentNetworkId}.`);
