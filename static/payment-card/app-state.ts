@@ -2,7 +2,7 @@ import { JsonRpcProvider, JsonRpcSigner } from "@ethersproject/providers";
 
 import { getNetworkExplorer } from "@ubiquity-dao/rpc-handler";
 import { convertToNetworkId } from "./services/use-rpc-handler";
-import { PermitReward } from "@ubiquity-os/permit-generation";
+import { PermitReward } from "@ubiquibot/permit-generation";
 
 export class AppState {
   public claims: PermitReward[] = [];

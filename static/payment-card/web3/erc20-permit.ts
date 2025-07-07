@@ -1,7 +1,7 @@
 import { TransactionResponse } from "@ethersproject/providers";
 import { getNetworkExplorer, permit2Address } from "@ubiquity-dao/rpc-handler";
 import { decodeError } from "@ubiquity-os/ethers-decode-error";
-import { PermitReward } from "@ubiquity-os/permit-generation";
+import { PermitReward } from "@ubiquibot/permit-generation";
 import { BigNumber, BigNumberish, Contract, ethers } from "ethers";
 import { erc20Abi, permit2Abi } from "../../../shared/abis";
 import { app, AppState } from "../app-state";
