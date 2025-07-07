@@ -3,6 +3,10 @@ import { decodePermits } from "@ubiquibot/permit-generation/handlers";
 import { AppState } from "../app-state";
 import { useRpcHandler } from "./use-rpc-handler";
 import { connectWallet } from "../web3/connect-wallet";
+import { toaster } from "../common-ui/toaster";
+import { getNetworkName, NetworkId } from "@ubiquity-dao/rpc-handler";
+import { switchNetwork } from "../web3/switch-network";
+import { ethers } from "ethers";
 
 declare const SUPABASE_URL: string;
 declare const SUPABASE_ANON_KEY: string;
@@ -29,6 +33,7 @@ export async function readClaimDataFromUrl(app: AppState) {
   app.claimTxs = await getClaimedTxs(app);
 
   app.provider = await useRpcHandler(app.networkId ?? app.reward.networkId);
+  await checkNetwork(app);
 }
 
 async function getClaimedTxs(app: AppState): Promise<Record<string, string>> {
@@ -41,4 +46,30 @@ async function getClaimedTxs(app: AppState): Promise<Record<string, string>> {
     }
   }
   return txs;
+}
+
+export async function checkNetwork(app: AppState) {
+  try {
+    const currentNetworkId = parseInt(await window.ethereum.request({ method: "eth_chainId" }), 16);
+
+    const appId = app.networkId ?? app.reward.networkId;
+    alert(getNetworkName(String(appId) as NetworkId));
+
+    if (currentNetworkId !== appId) {
+      console.warn(`Incorrect network. Expected ${appId}, but got ${currentNetworkId}.`);
+      toaster.create("error", `This dApp currently does not support payouts for network ID ${currentNetworkId}`);
+
+      // Try switching to the proper network id
+      switchNetwork(new ethers.providers.Web3Provider(window.ethereum), appId).catch((error) => {
+        console.error(error);
+        if (app.networkId !== null) {
+          toaster.create("error", `Please switch to the ${getNetworkName(String(appId) as NetworkId)} network to claim this reward.`);
+        }
+      });
+
+      return; // Stop further checks if the network is incorrect
+    }
+  } catch (error) {
+    console.error(error);
+  }
 }
