@@ -7,35 +7,6 @@ export interface ReloadlyAuthResponse {
   token_type: string;
 }
 
-export interface ReloadlyListCardResponse {
-  content: Card[];
-  pageable: {
-    sort: {
-      sorted: boolean;
-      unsorted: boolean;
-      empty: boolean;
-    };
-    pageNumber: number;
-    pageSize: number;
-    offset: number;
-    unpaged: boolean;
-    paged: boolean;
-  };
-  totalElements: number;
-  totalPages: number;
-  last: boolean;
-  first: boolean;
-  sort: {
-    sorted: boolean;
-    unsorted: boolean;
-    empty: boolean;
-  };
-  numberOfElements: number;
-  size: number;
-  number: number;
-  empty: boolean;
-}
-
 export interface CardsResponse {
   content: Card[];
 }

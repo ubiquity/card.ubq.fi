@@ -2,13 +2,9 @@ import { BigNumber, BigNumberish } from "ethers";
 import { formatEther, parseEther } from "@ethersproject/units";
 import { Card } from "./types/entity-types";
 
-export interface PriceToValueMap {
+interface PriceToValueMap {
   [key: string]: number;
 }
-export interface ValueToPriceMap {
-  [key: string]: number;
-}
-
 /**
  * PRICE OF A GIFT CARD
  * ====================
@@ -75,17 +71,6 @@ export function getTotalPriceOfValue(value: number, card: Card) {
   const discount = usdValue.mul(discountPercent).div(100 * 100);
 
   return Number(formatEther(usdValue.add(totalFee).sub(discount)));
-}
-
-export function getRangePriceToValueMap(card: Card) {
-  const priceToValueMap: PriceToValueMap = {};
-
-  [card.minRecipientDenomination, card.maxRecipientDenomination].forEach((value) => {
-    const totalPrice = getTotalPriceOfValue(Number(value), card);
-    priceToValueMap[totalPrice.toFixed(2).toString()] = Number(value);
-  });
-
-  return priceToValueMap;
 }
 
 export function getUsdValueForRangePrice(card: Card, price: BigNumberish) {

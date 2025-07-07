@@ -1,17 +1,8 @@
 import { z } from "zod";
 
-export const getBestCardParamsSchema = z.object({
-  country: z.string(),
-  amount: z.string(),
-});
-
-export type GetBestCardParams = z.infer<typeof getBestCardParamsSchema>;
-
 export const getOrderParamsSchema = z.object({
   orderId: z.string(),
 });
-
-export type GetOrderParams = z.infer<typeof getOrderParamsSchema>;
 
 export const getRedeemCodeParamsSchema = z.object({
   txId: z.coerce.number(),
@@ -20,8 +11,6 @@ export const getRedeemCodeParamsSchema = z.object({
   txHash: z.string(),
   retryCount: z.coerce.number(),
 });
-
-export type GetRedeemCodeParams = z.infer<typeof getRedeemCodeParamsSchema>;
 
 export const postOrderParamsSchema = z.object({
   productId: z.coerce.number(),

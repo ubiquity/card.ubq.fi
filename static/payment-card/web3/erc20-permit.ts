@@ -1,14 +1,10 @@
-import { TransactionResponse } from "@ethersproject/providers";
-import { getNetworkExplorer, permit2Address } from "@ubiquity-dao/rpc-handler";
-import { decodeError } from "@ubiquity-os/ethers-decode-error";
 import { PermitReward } from "@ubiquibot/permit-generation";
+import { permit2Address } from "@ubiquity-dao/rpc-handler";
+import { decodeError } from "@ubiquity-os/ethers-decode-error";
 import { BigNumber, BigNumberish, Contract, ethers } from "ethers";
 import { erc20Abi, permit2Abi } from "../../../shared/abis";
 import { app, AppState } from "../app-state";
 import { errorToast, MetaMaskError, toaster } from "../common-ui/toaster";
-import { supabase } from "../services/read-claim-data-from-url.ts";
-import { convertToNetworkId } from "../services/use-rpc-handler";
-import { connectWallet } from "./connect-wallet";
 
 export async function fetchTreasury(permit: PermitReward): Promise<{ balance: BigNumber; allowance: BigNumber; decimals: number; symbol: string }> {
   let balance: BigNumber, allowance: BigNumber, decimals: number, symbol: string;
@@ -43,20 +39,6 @@ export async function fetchTreasury(permit: PermitReward): Promise<{ balance: Bi
   } catch (error: unknown) {
     return { balance: BigNumber.from(-1), allowance: BigNumber.from(-1), decimals: -1, symbol: "" };
   }
-}
-
-async function checkPermitClaimability(app: AppState): Promise<boolean> {
-  try {
-    return await checkPermitClaimable(app);
-  } catch (error: unknown) {
-    if (error instanceof Error) {
-      const e = error as unknown as MetaMaskError;
-      console.error("Error in checkPermitClaimable: ", e);
-      errorToast(e, e.reason);
-    }
-  }
-
-  return false;
 }
 
 export async function transferFromPermit(permit2Contract: Contract, reward: PermitReward, successMessage?: string) {
@@ -94,56 +76,6 @@ export async function transferFromPermit(permit2Contract: Contract, reward: Perm
     }
     return null;
   }
-}
-
-export async function waitForTransaction(tx: TransactionResponse, successMessage: string, networkId: number) {
-  try {
-    const receipt = await tx.wait();
-    const networkExplorers = getNetworkExplorer(convertToNetworkId(networkId));
-
-    if (networkExplorers.length === 0) {
-      toaster.create("info", "We had to use a fallback block explorer which may take longer to populate your transaction.");
-    }
-
-    toaster.create("success", successMessage);
-
-    console.log(receipt.transactionHash);
-
-    return receipt;
-  } catch (error: unknown) {
-    if (error instanceof Error) {
-      const e = error as unknown as MetaMaskError;
-      console.error("Error in tx.wait: ", e);
-      errorToast(e, e.reason);
-    }
-  }
-}
-
-export function claimErc20PermitHandlerWrapper(app: AppState) {
-  return async function claimErc20PermitHandler() {
-    const signer = await connectWallet(); // we are re-testing the in-wallet rpc at this point
-    if (!signer) {
-      toaster.create("error", `Please connect your wallet to claim this reward.`);
-      return;
-    }
-
-    app.signer = signer; // update this here to be sure it's set if it wasn't before
-
-    const isPermitClaimable = await checkPermitClaimability(app);
-    if (!isPermitClaimable) return;
-
-    const permit2Contract = new ethers.Contract(permit2Address, permit2Abi, signer);
-    if (!permit2Contract) return;
-
-    const tx = await transferFromPermit(permit2Contract, app.reward);
-    if (!tx) return;
-
-    const receipt = await waitForTransaction(tx, `Claim Complete.`, app.reward.networkId);
-    if (!receipt) return;
-
-    const isHashUpdated = await updatePermitTxHash(app, receipt.transactionHash);
-    if (!isHashUpdated) return;
-  };
 }
 
 export async function checkPermitClaimable(app: AppState): Promise<boolean> {
@@ -230,18 +162,4 @@ function nonceBitmap(nonce: BigNumberish): { wordPos: BigNumber; bitPos: number 
   // bitPos is the last 8 bits of the nonce
   const bitPos = BigNumber.from(nonce).and(255).toNumber();
   return { wordPos, bitPos };
-}
-
-async function updatePermitTxHash(app: AppState, hash: string): Promise<boolean> {
-  const { error } = await supabase
-    .from("permits")
-    .update({ transaction: hash })
-    // using only nonce in the condition as it's defined unique on db
-    .eq("nonce", app.reward.nonce.toString());
-
-  if (error !== null) {
-    console.error(error);
-  }
-
-  return true;
 }

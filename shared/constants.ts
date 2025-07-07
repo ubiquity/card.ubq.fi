@@ -19,11 +19,3 @@ export const networkRpcs: Record<number, string> = {
   100: "https://rpc.gnosischain.com",
   31337: "http://127.0.0.1:8545",
 };
-
-export const chainIdToNameMap: Record<number, string> = {
-  1: "Ethereum",
-  5: "Goerli Testnet",
-  10: "Optimism",
-  100: "Gnosis",
-  31337: "Local Testnet",
-};

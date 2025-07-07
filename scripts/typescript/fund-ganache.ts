@@ -1,6 +1,7 @@
 // src/uusd_interaction.ts
 import { ethers, BigNumber, Signer } from "ethers";
 import { Provider, TransactionResponse } from "@ethersproject/providers";
+import { ubiquityDollarChainAddresses } from "../../shared/constants";
 
 // --- Configuration Constants ---
 const GANACHE_RPC_URL = "http://127.0.0.1:8545";
@@ -10,11 +11,11 @@ const ERC20_ABI = [
   "function balanceOf(address account) view returns (uint256)",
   "function decimals() view returns (uint8)",
 ];
-const UUSD_ADDRESS = "0xC6ed4f520f6A4e4DC27273509239b7F8A68d2068";
+const EXPECTED_CHAIN_ID = 31337;
+const UUSD_ADDRESS = ubiquityDollarChainAddresses[EXPECTED_CHAIN_ID];
 const WHALE_ADDRESS = "0x9051eDa96dB419c967189F4Ac303a290F3327680";
 const RECIPIENT_WALLET = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8";
 const PERMIT2_ADDRESS = "0x000000000022D473030F116dDEE9F6B43aC78BA3";
-const EXPECTED_CHAIN_ID = 31337;
 
 // Connect to Ganache
 const provider = new ethers.providers.JsonRpcProvider(GANACHE_RPC_URL);
