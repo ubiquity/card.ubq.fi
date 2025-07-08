@@ -46,7 +46,12 @@ export async function getUserCountryCode(): Promise<string> {
 }
 
 export async function getConnectedWallet() {
-  const provider = new ethers.providers.Web3Provider(window.ethereum);
-  const signer = provider.getSigner();
-  return await signer.getAddress();
+  try {
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    const signer = provider.getSigner();
+    return await signer.getAddress();
+  } catch (e) {
+    console.error(e);
+    throw new Error("Connection to your wallet failed.");
+  }
 }
