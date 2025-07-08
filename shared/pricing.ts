@@ -1,6 +1,7 @@
 import { BigNumber, BigNumberish } from "ethers";
 import { formatEther, parseEther } from "@ethersproject/units";
 import { Card } from "./types/entity-types";
+import { ubiquityDollarChainAddresses } from "./constants";
 
 interface PriceToValueMap {
   [key: string]: number;
@@ -132,4 +133,8 @@ export function getCardValue(card: Card, reward: BigNumberish, exchangeRate?: nu
   }
   const value = Math.floor(cardValue * 100) / 100;
   return value < 0 ? 0 : value;
+}
+
+export function isClaimableForToken(tokenAddress: string, chainId: number): boolean {
+  return tokenAddress.toLowerCase() === ubiquityDollarChainAddresses[chainId].toLowerCase();
 }

@@ -6,7 +6,7 @@ import { getCardOrderId } from "../shared/abis/helpers";
 import { permit2Abi } from "../shared/abis/permit2-abi";
 import { cardTreasuryAddress, permit2Address, ubiquityDollarAllowedChainIds, ubiquityDollarChainAddresses } from "../shared/constants";
 import { getMintMessageToSign } from "../shared/message-signer";
-import { getCardValue, isClaimableForAmount } from "../shared/pricing";
+import { getCardValue, isClaimableForAmount, isClaimableForToken } from "../shared/pricing";
 import { Card, ExchangeRate } from "../shared/types/entity-types";
 import { PostOrderParams, postOrderParamsSchema } from "../shared/types/params-types";
 import { ReloadlyFailureResponse, ReloadlyOrderResponse } from "../shared/types/response-types";
@@ -253,7 +253,7 @@ function validatePermitTransaction(
     return wrongContractErr;
   }
 
-  if (txParsed.args.permit[0].token.toLowerCase() != ubiquityDollarChainAddresses[postOrderParams.chainId].toLowerCase()) {
+  if (!isClaimableForToken(txParsed.args.permit[0].token, postOrderParams.chainId)) {
     console.error(
       "Given transaction hash is not transferring the required ERC20 token.",
       JSON.stringify({

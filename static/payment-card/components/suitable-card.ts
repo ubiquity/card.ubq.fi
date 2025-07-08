@@ -2,11 +2,11 @@ import ct from "countries-and-timezones";
 import { BigNumberish } from "ethers";
 import { getCardValue } from "../../../shared/pricing";
 import { Card } from "../../../shared/types/entity-types";
+import { app } from "../app-state";
+import { pickSuitableCards } from "../services/ai";
 import { getCards } from "../services/backend-calls";
 import { getUserCountryCode } from "../utils";
 import { mint } from "./mint-action";
-import { pickSuitableCards } from "../services/ai";
-import { app } from "../app-state";
 
 const html = String.raw;
 
