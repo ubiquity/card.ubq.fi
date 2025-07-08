@@ -1,5 +1,6 @@
 import { Context } from "./helpers/types";
 
 export async function onRequest(ctx: Context): Promise<Response> {
-  return Response.json({ USE_RELOADLY_SANDBOX: ctx.env.USE_RELOADLY_SANDBOX }, { status: 200 });
+  const result = ctx.env.USE_RELOADLY_SANDBOX === "false" ? "production" : "sandbox";
+  return Response.json({ result: result }, { status: 200 });
 }
