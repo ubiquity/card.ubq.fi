@@ -12,8 +12,13 @@ export function validateRequestMethod(expectedMethod: string, receivedMethod: st
 }
 
 export function validateEnvVars(ctx) {
-  if (!(ctx.env.RELOADLY_API_CLIENT_ID && ctx.env.RELOADLY_API_CLIENT_SECRET && ctx.env.KV_CONSUMED_TX_HASHES)) {
+  if (!(ctx.env.RELOADLY_API_CLIENT_ID && ctx.env.RELOADLY_API_CLIENT_SECRET)) {
     console.error("One or more environment variable is missing.");
     throw new Error("Missing server configurations.");
+  }
+
+  if (!ctx.env.KV_CONSUMED_TX_HASHES) {
+    console.error("You have not set up cloudflare KV for this project.");
+    throw new Error("You have not set up cloudflare KV for this project.");
   }
 }
