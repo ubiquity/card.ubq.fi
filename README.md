@@ -5,7 +5,7 @@ Claim your UbiquityOS Reward in Visa or Mastercard.
 ## Setup Local Testing Environment
 
 - copy `env.example` to `.env` and fill env vars
-- fill `wrangler.toml` env vars and KV config
+- fill `wrangler.toml` env vars and [set up cloudflare KV](https://developers.cloudflare.com/kv/get-started/#2-create-a-kv-namespace)
 - run `yarn install`
 - run the following in separate terminals
 
