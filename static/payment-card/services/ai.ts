@@ -16,6 +16,10 @@ export async function pickSuitableCards(cards: Card[], countryCode: string, amou
     return card.status === "ACTIVE" && isCardAvailable(card, amount);
   });
 
+  if (filteredCards.length === 0) {
+    throw new Error(`No cards are available for your permit amount & location ${countryName}.`);
+  }
+
   const oldSuitableCards = localStorage.getItem("suitableCards");
   if (oldSuitableCards) {
     const oldCards: number[] = JSON.parse(oldSuitableCards);
