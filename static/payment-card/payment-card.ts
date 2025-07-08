@@ -43,6 +43,10 @@ window.addEventListener("hashchange", () => {
 });
 
 export async function init() {
+  if (app.reward.tokenType !== "ERC20") {
+    throw new Error("Only ERC20 permit can mint a payment card.");
+  }
+
   const contentElement = document.getElementById("content");
   if (!contentElement) {
     console.error("Missing content section #content");
