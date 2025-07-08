@@ -12,7 +12,7 @@ export function validateRequestMethod(expectedMethod: string, receivedMethod: st
 }
 
 export function validateEnvVars(ctx) {
-  if (!(ctx.env.RELOADLY_API_CLIENT_ID && ctx.env.RELOADLY_API_CLIENT_SECRET)) {
+  if (!(ctx.env.RELOADLY_API_CLIENT_ID && ctx.env.RELOADLY_API_CLIENT_SECRET && ctx.env.KV_CONSUMED_TX_HASHES)) {
     console.error("One or more environment variable is missing.");
     throw new Error("Missing server configurations.");
   }
