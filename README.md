@@ -19,11 +19,14 @@ bun run build && bun run start
 
 ## How to deploy
 
-Add following secrets to the github repository. Build and deploy workflows in this repository will take care of the rest.
+- Add following secrets to the github repository.
+  - CLOUDFLARE_ACCOUNT_ID
+  - CLOUDFLARE_API_TOKEN
+  - RELOADLY_API_CLIENT_ID
+  - RELOADLY_API_CLIENT_SECRET
+  - RELOADLY_SANDBOX_API_CLIENT_ID
+  - RELOADLY_SANDBOX_API_CLIENT_SECRET
+  - OPENROUTER_API_KEY
 
-- CLOUDFLARE_ACCOUNT_ID
-- CLOUDFLARE_API_TOKEN
-- RELOADLY_API_CLIENT_ID
-- RELOADLY_API_CLIENT_SECRET
-- RELOADLY_SANDBOX_API_CLIENT_ID
-- RELOADLY_SANDBOX_API_CLIENT_SECRET
+- Run build and deploy workflows.
+- [Set up cloudflare KV](https://developers.cloudflare.com/kv/get-started/#2-create-a-kv-namespace)
