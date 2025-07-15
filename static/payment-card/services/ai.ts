@@ -51,6 +51,7 @@ export async function pickSuitableCards(cards: Card[], countryCode: string, amou
     "deepseek/deepseek-r1:free",
     "deepseek/deepseek-v3-base:free",
     "google/gemini-2.0-flash-exp:free",
+    /* cspell:disable-next-line */
     "mistralai/mistral-nemo:free",
   ];
 
