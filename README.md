@@ -6,13 +6,13 @@ Claim your UbiquityOS Reward in Visa or Mastercard.
 
 - copy `env.example` to `.env` and fill env vars
 - fill `wrangler.toml` env vars and [set up cloudflare KV](https://developers.cloudflare.com/kv/get-started/#2-create-a-kv-namespace)
-- run `bun install`
+- run `yarn install`
 - run the following in separate terminals
 
 ```
-bun run ganache:start
-bun run ganache:fund
-bun run build && bun run start
+yarn ganache:start
+yarn ganache:fund
+yarn build && yarn start
 ```
 
 - Use the erc20 permit url to claim a card
