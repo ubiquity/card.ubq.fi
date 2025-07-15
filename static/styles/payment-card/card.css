@@ -475,6 +475,7 @@
   background-color: #030b16;
   padding: 12px;
   border-radius: 4px;
+  max-width: 100%;
 }
 
 .content .summary {
