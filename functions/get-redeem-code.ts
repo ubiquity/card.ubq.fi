@@ -31,7 +31,7 @@ export async function onRequest(ctx: Context): Promise<Response> {
 
     const errorResponse = Response.json({ message: "Given details are not valid to redeem code." }, { status: 403 });
 
-    if (verifyMessage(getRevealMessageToSign({ txId, txHash, retryCount }), signedMessage) != wallet) {
+    if (verifyMessage(getRevealMessageToSign({ txId, txHash, retryCount }), signedMessage) !== wallet) {
       console.error(
         `Signed message verification failed: ${JSON.stringify({
           signedMessage,
@@ -84,7 +84,7 @@ export async function getRedeemCode(transactionId: number, accessToken: AccessTo
   const response = await fetch(url, options);
   const responseJson = await response.json();
 
-  if (response.status != 200) {
+  if (!response.ok) {
     throw new Error(
       `Error from Reloadly API: ${JSON.stringify({
         status: response.status,

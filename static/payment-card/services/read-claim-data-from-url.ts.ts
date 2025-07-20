@@ -40,7 +40,7 @@ async function getClaimedTxs(app: AppState): Promise<Record<string, string>> {
   for (const claim of app.claims) {
     const { data } = await supabase.from("permits").select("transaction").eq("nonce", claim.nonce.toString());
 
-    if (data?.length == 1 && data[0].transaction !== null) {
+    if (data?.length === 1 && data[0].transaction !== null) {
       txs[claim.nonce.toString()] = data[0].transaction as string;
     }
   }

@@ -25,7 +25,7 @@ export async function onRequest(ctx: Context): Promise<Response> {
 
     if (!reloadlyTransaction) {
       return Response.json({ message: "Order not found." }, { status: 404 });
-    } else if (reloadlyTransaction.status && reloadlyTransaction.status == "SUCCESSFUL") {
+    } else if (reloadlyTransaction.status && reloadlyTransaction.status === "SUCCESSFUL") {
       return Response.json({ transaction: reloadlyTransaction }, { status: 200 });
     } else {
       return Response.json({ message: "There is no successful transaction for given order ID." }, { status: 404 });
@@ -56,7 +56,7 @@ export async function getTransactionFromOrderId(orderId: string, accessToken: Ac
   console.log("Response status", response.status);
   console.log(`Response from ${url}`, responseJson);
 
-  if (response.status != 200) {
+  if (!response.ok) {
     throw new Error(
       `Error from Reloadly API: ${JSON.stringify({
         status: response.status,

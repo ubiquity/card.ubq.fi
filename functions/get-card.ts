@@ -37,7 +37,7 @@ export async function onRequest(ctx: Context): Promise<Response> {
     const response = await fetch(url, options);
     const responseJson = await response.json();
 
-    if (response.status != 200) {
+    if (!response.ok) {
       throw new Error(
         `Error from Reloadly API: ${JSON.stringify({
           status: response.status,

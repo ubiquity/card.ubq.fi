@@ -8,7 +8,7 @@ export async function getCards() {
   const cardsResponse = await fetch(retrieveCardsUrl, requestInit);
   const responseJson = await cardsResponse.json();
 
-  if (cardsResponse.status == 200) {
+  if (cardsResponse.ok) {
     return responseJson.cards as Card[];
   }
   return [];
@@ -19,7 +19,7 @@ export async function getOrderTransaction(orderId: string) {
   const orderResponse = await fetch(retrieveCardsUrl, requestInit);
   const responseJson = await orderResponse.json();
 
-  if (orderResponse.status == 200) {
+  if (orderResponse.ok) {
     return responseJson.transaction as OrderTransaction;
   }
   return null;
@@ -37,7 +37,7 @@ export async function postOrder(params: PostOrderParams) {
     body: JSON.stringify(params),
   });
 
-  if (response.status != 200) {
+  if (!response.ok) {
     return null;
   }
 

@@ -39,7 +39,7 @@ async function getAllCards(accessToken: AccessToken) {
   const [mastercardResponse, visaResponse] = await Promise.all([fetch(mastercardUrl, options), fetch(visaUrl, options)]);
   const [mastercardJson, visaJson] = await Promise.all([mastercardResponse.json(), visaResponse.json()]);
 
-  if (mastercardResponse.status != 200) {
+  if (!mastercardResponse.ok) {
     throw new Error(
       `Error from Reloadly API for mastercard: ${JSON.stringify({
         status: mastercardResponse.status,
@@ -48,7 +48,7 @@ async function getAllCards(accessToken: AccessToken) {
     );
   }
 
-  if (visaResponse.status != 200) {
+  if (!visaResponse.ok) {
     throw new Error(
       `Error from Reloadly API for mastercard: ${JSON.stringify({
         status: visaResponse.status,

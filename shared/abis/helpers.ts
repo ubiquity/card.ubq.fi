@@ -9,5 +9,5 @@ export function getCardOrderId(wallet: string, txHash: string, retryCount: numbe
   return ethers.utils.keccak256(integrityBytes);
 }
 export function isCardAvailable(card: Card, reward: BigNumberish): boolean {
-  return card.denominationType == "RANGE" && isRangePriceCardClaimable(card, reward);
+  return card.denominationType === "RANGE" && isRangePriceCardClaimable(card, reward);
 }

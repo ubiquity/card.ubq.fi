@@ -54,7 +54,7 @@ export async function onRequest(ctx: Context): Promise<Response> {
     const orderId = getCardOrderId(txReceipt.from, txHash, retryCount);
 
     let exchangeRate = 1;
-    if (card.recipientCurrencyCode != "USD") {
+    if (card.recipientCurrencyCode !== "USD") {
       const exchangeRateResponse = await getExchangeRate(1, card.recipientCurrencyCode, accessToken);
       exchangeRate = exchangeRateResponse.senderAmount;
     }
@@ -69,7 +69,7 @@ export async function onRequest(ctx: Context): Promise<Response> {
 
     const order = await orderCard(txReceipt.from.toLowerCase(), productId, cardValue, orderId, accessToken);
 
-    if (order.status != "REFUNDED" && order.status != "FAILED") {
+    if (order.status !== "REFUNDED" && order.status !== "FAILED") {
       await ctx.env.KV_CONSUMED_TX_HASHES.put(txHash.toLowerCase(), order.transactionId.toString());
       return Response.json(order, { status: 200 });
     } else {
@@ -95,7 +95,7 @@ export async function getCardById(productId: number, accessToken: AccessToken): 
   const response = await fetch(url, options);
   const responseJson = await response.json();
 
-  if (response.status != 200) {
+  if (!response.ok) {
     throw new Error(
       `Error from Reloadly API: ${JSON.stringify({
         status: response.status,
@@ -140,7 +140,7 @@ async function orderCard(userId: string, productId: number, cardValue: number, i
   const response = await fetch(url, options);
   const responseJson = await response.json();
 
-  if (response.status != 200) {
+  if (!response.ok) {
     throw new Error(
       `Error from Reloadly API: ${JSON.stringify({
         status: response.status,
@@ -173,7 +173,7 @@ async function getExchangeRate(usdAmount: number, fromCurrency: string, accessTo
   const response = await fetch(url, options);
   const responseJson = await response.json();
 
-  if (response.status != 200) {
+  if (!response.ok) {
     throw new Error(
       `Error from Reloadly API: ${JSON.stringify({
         status: response.status,
@@ -208,7 +208,7 @@ function validatePermitTransaction(
   }
   const mintMessageToSign = getMintMessageToSign(chainId, txHash, productId, country);
   const signingWallet = verifyMessage(mintMessageToSign, signedMessage).toLocaleLowerCase();
-  if (signingWallet != txReceipt.from.toLowerCase()) {
+  if (signingWallet !== txReceipt.from.toLowerCase()) {
     console.error(
       `Signed message verification failed: ${JSON.stringify({
         wallet: txReceipt.from.toLowerCase(),
@@ -231,12 +231,12 @@ function validatePermitTransaction(
 
   const wrongContractErr = "Transaction is not authorized to purchase gift card.";
 
-  if (txReceipt.to.toLowerCase() != permit2Address.toLowerCase()) {
+  if (txReceipt.to.toLowerCase() !== permit2Address.toLowerCase()) {
     console.error("Given transaction hash is not an interaction with permit2Address", `txReceipt.to=${txReceipt.to}`, `permit2Address=${permit2Address}`);
     return wrongContractErr;
   }
 
-  if (txParsed.args.transferDetails.to.toLowerCase() != cardTreasuryAddress.toLowerCase()) {
+  if (txParsed.args.transferDetails.to.toLowerCase() !== cardTreasuryAddress.toLowerCase()) {
     console.error(
       "Given transaction hash is not a token transfer to cardTreasuryAddress",
       `txParsed.args.transferDetails.to=${txParsed.args.transferDetails.to}`,
@@ -245,7 +245,7 @@ function validatePermitTransaction(
     return wrongContractErr;
   }
 
-  if (txParsed.functionFragment.name != "permitTransferFrom") {
+  if (txParsed.functionFragment.name !== "permitTransferFrom") {
     console.error(
       "Given transaction hash is not call to contract function permitTransferFrom",
       `txParsed.functionFragment.name=${txParsed.functionFragment.name}`

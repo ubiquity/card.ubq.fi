@@ -153,5 +153,5 @@ async function hasMintingFinished(mintParams: MintParams): Promise<boolean> {
     },
   });
 
-  return orderResponse.status != 404;
+  return orderResponse.status !== 404;
 }

@@ -37,7 +37,7 @@ async function revealRedeemCode(completedOrder: CompletedOrder, signedMessage: s
     requestInit
   );
 
-  if (response.status != 200) {
+  if (!response.ok) {
     toaster.create("error", `Redeem code can't be revealed to the connected wallet.`);
     return;
   }

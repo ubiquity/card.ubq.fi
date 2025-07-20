@@ -87,7 +87,7 @@ export async function pickSuitableCards(cards: Card[], countryCode: string, amou
   localStorage.setItem("suitableCards", JSON.stringify(suitableCards));
 
   if (suitableCards.length) {
-    return cards.find((card) => card.productId == suitableCards[0]) || null;
+    return cards.find((card) => card.productId === suitableCards[0]) || null;
   }
 
   return null;

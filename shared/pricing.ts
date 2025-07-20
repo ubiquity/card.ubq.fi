@@ -35,21 +35,21 @@ interface PriceToValueMap {
  */
 
 export function isClaimableForAmount(card: Card, rewardAmount: BigNumberish) {
-  if (card.senderCurrencyCode != "USD") {
+  if (card.senderCurrencyCode !== "USD") {
     throw new Error(`Failed to validate price because gift card's senderCurrencyCode is not USD: ${JSON.stringify({ rewardAmount, card })}`);
   }
 
-  if (card.denominationType == "RANGE") {
+  if (card.denominationType === "RANGE") {
     return isRangePriceCardClaimable(card, rewardAmount);
-  } else if (card.denominationType == "FIXED") {
+  } else if (card.denominationType === "FIXED") {
     return isFixedPriceCardClaimable(card, rewardAmount);
   }
 }
 
 export function getEstimatedExchangeRate(card: Card) {
   let exchangeRate = 1;
-  if (card.recipientCurrencyCode != "USD") {
-    if (card.denominationType == "FIXED") {
+  if (card.recipientCurrencyCode !== "USD") {
+    if (card.denominationType === "FIXED") {
       const key = Object.keys(card.fixedRecipientToSenderDenominationsMap)[0];
       exchangeRate = card.fixedRecipientToSenderDenominationsMap[key] / Number(key);
     } else {
@@ -115,10 +115,10 @@ export function isFixedPriceCardClaimable(card: Card, rewardAmount: BigNumberish
 export function getCardValue(card: Card, reward: BigNumberish, exchangeRate?: number) {
   let cardValue;
   const amountDaiEth = Number(formatEther(reward)).toFixed(2);
-  if (card.denominationType == "FIXED") {
+  if (card.denominationType === "FIXED") {
     const priceToValueMap = getFixedPriceToValueMap(card);
     cardValue = priceToValueMap[amountDaiEth];
-  } else if (card.denominationType == "RANGE") {
+  } else if (card.denominationType === "RANGE") {
     const usdValue = getUsdValueForRangePrice(card, reward);
     if (!exchangeRate) {
       exchangeRate = getEstimatedExchangeRate(card);

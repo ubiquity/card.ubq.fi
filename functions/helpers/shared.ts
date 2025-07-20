@@ -23,7 +23,7 @@ export async function getAccessToken(env: Env): Promise<AccessToken> {
   };
 
   const res = await fetch(RELOADLY_AUTH_URL, options);
-  if (res.status == 200) {
+  if (res.ok) {
     const successResponse = (await res.json()) as ReloadlyAuthResponse;
     return {
       token: successResponse.access_token,
