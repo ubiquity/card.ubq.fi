@@ -4,7 +4,7 @@ export const RELOADLY_PRODUCTION_API_URL = "https://web3-gateway-test.com/proxy/
 
 export const ubiquityDollarAllowedChainIds = [1, 100, 31337];
 
-export const permit2Address = "0x000000000022D473030F116dDEE9F6B43aC78BA3";
+export const permit2Address = "0xd635918A75356D133d5840eE5c9ED070302C9C60";
 export const cardTreasuryAddress = "0xb85275a03D07e1ed1e19Bc329C95dFD12645792D";
 
 export const ubiquityDollarChainAddresses: Record<number, string> = {
