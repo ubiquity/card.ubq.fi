@@ -23,7 +23,7 @@
     "format:prettier": "prettier --write .",
     "format:cspell": "cspell **/*",
     "postinstall": "git submodule update --init --recursive",
-    "ganache:start": "ganache --fork.url \"https://rpc.gnosischain.com\" --wallet.mnemonic \"test test test test test test test test test test test junk\" --wallet.unlockedAccounts \"0x9051eDa96dB419c967189F4Ac303a290F3327680\" --chain.chainId 31337 --logging.verbose true",
+    "ganache:start": "ganache --fork.url \"https://rpc.gnosischain.com\" --wallet.mnemonic \"test test test test test test test test test test test junk\" --wallet.unlockedAccounts \"0xF95d1352467773676d5435A9ADa94a3701EfDB6c\" \"0xC4E7263Dd870A29f1cFe438D1A7DB48547B16888\" --chain.chainId 31337 --logging.verbose true",
     "ganache:fund": "tsx scripts/typescript/fund-ganache.ts",
     "knip": "knip --config .github/knip.ts",
     "knip-ci": "knip --no-exit-code --reporter json --config .github/knip.ts",

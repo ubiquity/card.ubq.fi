@@ -13,7 +13,8 @@ const ERC20_ABI = [
 ];
 const EXPECTED_CHAIN_ID = 31337;
 const UUSD_ADDRESS = ubiquityDollarChainAddresses[EXPECTED_CHAIN_ID];
-const WHALE_ADDRESS = "0x9051eDa96dB419c967189F4Ac303a290F3327680";
+const XDAI_WHALE_ADDRESS = "0xC4E7263Dd870A29f1cFe438D1A7DB48547B16888";
+const UUSD_WHALE_ADDRESS = "0xF95d1352467773676d5435A9ADa94a3701EfDB6c";
 const RECIPIENT_WALLET = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8";
 const PERMIT2_ADDRESS = "0x000000000022D473030F116dDEE9F6B43aC78BA3";
 
@@ -139,33 +140,75 @@ async function main() {
   // Verify Network
   await verifyNetwork(provider);
 
-  console.log(`Assuming account ${WHALE_ADDRESS} is unlocked by Ganache configuration.`);
+  console.log(`Assuming account ${UUSD_WHALE_ADDRESS} and ${XDAI_WHALE_ADDRESS} are unlocked by Ganache configuration.`);
 
-  const whaleSigner: Signer = provider.getSigner(WHALE_ADDRESS);
+  const uusdWhaleSigner: Signer = provider.getSigner(UUSD_WHALE_ADDRESS);
+  const xdaiWhaleSigner: Signer = provider.getSigner(XDAI_WHALE_ADDRESS);
   const recipientSigner: Signer = provider.getSigner(RECIPIENT_WALLET);
 
-  // Check ETH balances for gas
-  await checkEthBalance(WHALE_ADDRESS, "Whale", provider);
+  // Check ETH/xDAI balances for gas
+  await checkEthBalance(UUSD_WHALE_ADDRESS, "UUSD Whale", provider);
+  await checkEthBalance(XDAI_WHALE_ADDRESS, "xDAI Whale", provider);
   await checkEthBalance(RECIPIENT_WALLET, "Recipient", provider);
+
+  // Transfer 0.1 ETH/xDAI to UUSD Whale from xDAI_WHALE_ADDRESS for gas
+  console.log(`\nTransferring 0.1 ETH/xDAI from ${XDAI_WHALE_ADDRESS} to UUSD Whale (${UUSD_WHALE_ADDRESS}) for gas...`);
+  const ethAmountForUusdWhale = ethers.utils.parseEther("0.1");
+  try {
+    const ethTransferTx = await xdaiWhaleSigner.sendTransaction({
+      to: UUSD_WHALE_ADDRESS,
+      value: ethAmountForUusdWhale,
+    });
+    console.log(`ETH/xDAI transfer to UUSD Whale transaction hash: ${ethTransferTx.hash}`);
+    await ethTransferTx.wait();
+    console.log("ETH/xDAI transfer to UUSD Whale successful!");
+  } catch (error: unknown) {
+    let errorMessage = "Unknown error during ETH/xDAI transfer to UUSD Whale.";
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+    console.error("ETH/xDAI transfer to UUSD Whale failed:", errorMessage);
+    process.exit(1);
+  }
+
+  // Transfer 0.1 ETH/xDAI to recipient from xDAI_WHALE_ADDRESS
+  console.log(`\nTransferring 0.1 ETH/xDAI from ${XDAI_WHALE_ADDRESS} to ${RECIPIENT_WALLET}...`);
+  const ethAmountToTransfer = ethers.utils.parseEther("0.1");
+  try {
+    const ethTransferTx = await xdaiWhaleSigner.sendTransaction({
+      to: RECIPIENT_WALLET,
+      value: ethAmountToTransfer,
+    });
+    console.log(`ETH/xDAI transfer transaction hash: ${ethTransferTx.hash}`);
+    await ethTransferTx.wait();
+    console.log("ETH/xDAI transfer successful!");
+  } catch (error: unknown) {
+    let errorMessage = "Unknown error during ETH/xDAI transfer.";
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+    console.error("ETH/xDAI transfer failed:", errorMessage);
+    process.exit(1);
+  }
 
   // Get UUSD contract instance
   const uusdContract = new ethers.Contract(UUSD_ADDRESS, ERC20_ABI, provider) as Erc20Interface; // Using ERC20Interface
 
   // Get UUSD decimals and initial balances (only decimals is returned for explicit use)
-  const decimals = await getUusdDetails(uusdContract, WHALE_ADDRESS, RECIPIENT_WALLET);
+  const decimals = await getUusdDetails(uusdContract, UUSD_WHALE_ADDRESS, RECIPIENT_WALLET);
 
   // --- Approve 10000 UUSD for Permit2 from RECIPIENT_WALLET ---
   const amountToApprove = ethers.utils.parseUnits("10000", decimals);
   await approveUusd(recipientSigner, uusdContract, PERMIT2_ADDRESS, amountToApprove, RECIPIENT_WALLET);
 
-  // --- Transfer 500 UUSD from whale to RECIPIENT_WALLET ---
-  const amountToTransfer = ethers.utils.parseUnits("500", decimals);
-  await transferUusd(whaleSigner, uusdContract, RECIPIENT_WALLET, amountToTransfer, WHALE_ADDRESS);
+  // --- Transfer 500 UUSD from UUSD whale to RECIPIENT_WALLET ---
+  const amountToTransfer = ethers.utils.parseUnits("400", decimals);
+  await transferUusd(uusdWhaleSigner, uusdContract, RECIPIENT_WALLET, amountToTransfer, UUSD_WHALE_ADDRESS);
 
   // Get final balances
-  const finalWhaleUusdBalance: BigNumber = await uusdContract.balanceOf(WHALE_ADDRESS);
+  const finalUusdWhaleUusdBalance: BigNumber = await uusdContract.balanceOf(UUSD_WHALE_ADDRESS);
   const finalRecipientUusdBalance: BigNumber = await uusdContract.balanceOf(RECIPIENT_WALLET);
-  console.log(`\nWhale's final UUSD balance: ${ethers.utils.formatUnits(finalWhaleUusdBalance, decimals)} UUSD`);
+  console.log(`\nUUSD Whale's final UUSD balance: ${ethers.utils.formatUnits(finalUusdWhaleUusdBalance, decimals)} UUSD`);
   console.log(`Recipient's final UUSD balance: ${ethers.utils.formatUnits(finalRecipientUusdBalance, decimals)} UUSD`);
 }
 
