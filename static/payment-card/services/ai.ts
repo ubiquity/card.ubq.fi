@@ -78,11 +78,17 @@ export async function pickSuitableCards(cards: Card[], countryCode: string, amou
     );
   }
 
-  const aiResponseJson = (await firstAiResponse.json()) as OpenRouterCardPromptResponse;
-  console.log("aiResponseJson:", aiResponseJson);
-  const content = JSON.parse(aiResponseJson.choices[0].message.content);
-  const suitableCards = content.productIds as number[];
-  console.log("suitableCards:", suitableCards);
+  let suitableCards: number[] = [];
+  try {
+    const aiResponseJson = (await firstAiResponse.json()) as OpenRouterCardPromptResponse;
+    console.log("aiResponseJson:", aiResponseJson);
+    const content = JSON.parse(aiResponseJson.choices[0].message.content);
+    suitableCards = content.productIds as number[];
+    console.log("suitableCards:", suitableCards);
+  } catch (e) {
+    console.error("Failed to parse AI response:", e);
+    throw new Error("Failed to parse AI response. Please retry later.");
+  }
 
   localStorage.setItem("suitableCards", JSON.stringify(suitableCards));
 
