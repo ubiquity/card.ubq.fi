@@ -1,4 +1,3 @@
-import { JsonRpcSigner } from "@ethersproject/providers";
 import { ethers } from "ethers";
 import { toaster } from "../common-ui/toaster";
 
@@ -28,7 +27,7 @@ function mobileCheck() {
   return checkMobile(navigator.userAgent || navigator.vendor || (window as unknown as { opera: string }).opera);
 }
 
-export async function connectWallet(): Promise<JsonRpcSigner | null> {
+export async function connectWallet(): Promise<ethers.providers.JsonRpcSigner | null> {
   try {
     const wallet = new ethers.providers.Web3Provider(window.ethereum);
 

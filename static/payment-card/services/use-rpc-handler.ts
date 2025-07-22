@@ -1,5 +1,5 @@
-import { RPCHandler, HandlerConstructorConfig, NetworkId } from "@ubiquity-dao/rpc-handler";
-import { JsonRpcProvider } from "@ethersproject/providers";
+import { HandlerConstructorConfig, NetworkId, RPCHandler } from "@ubiquity-dao/rpc-handler";
+import { ethers } from "ethers";
 import { networkRpcs } from "../../../shared/constants";
 
 export function convertToNetworkId(networkId: number | string): NetworkId {
@@ -46,6 +46,6 @@ export async function useRpcHandler(networkId: number) {
     return provider;
   } catch (e) {
     console.log(`RpcHandler is having issues. Error: ${e} \nUsing backup rpc.`);
-    return new JsonRpcProvider({ url: networkRpcs[networkId], skipFetchSetup: true });
+    return new ethers.providers.JsonRpcProvider({ url: networkRpcs[networkId], skipFetchSetup: true });
   }
 }

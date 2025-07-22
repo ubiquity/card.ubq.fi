@@ -1,15 +1,14 @@
-import { JsonRpcProvider, JsonRpcSigner } from "@ethersproject/providers";
-
 import { getNetworkExplorer } from "@ubiquity-dao/rpc-handler";
 import { convertToNetworkId } from "./services/use-rpc-handler";
 import { PermitReward } from "@ubiquibot/permit-generation";
+import { ethers } from "ethers";
 
 export class AppState {
   public claims: PermitReward[] = [];
   public claimTxs: Record<string, string> = {};
-  private _provider!: JsonRpcProvider;
+  private _provider!: ethers.providers.JsonRpcProvider;
   private _currentIndex = 0;
-  private _signer: JsonRpcSigner | null = null;
+  private _signer: ethers.providers.JsonRpcSigner | null = null;
 
   get signer() {
     return this._signer;
@@ -23,11 +22,11 @@ export class AppState {
     return this.reward?.networkId || null;
   }
 
-  get provider(): JsonRpcProvider {
+  get provider(): ethers.providers.JsonRpcProvider {
     return this._provider;
   }
 
-  set provider(value: JsonRpcProvider) {
+  set provider(value: ethers.providers.JsonRpcProvider) {
     this._provider = value;
   }
 

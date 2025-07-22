@@ -1,7 +1,7 @@
 import { BigNumber, BigNumberish } from "ethers";
-import { formatEther, parseEther } from "@ethersproject/units";
-import { Card } from "./types/entity-types";
+import { formatEther, parseEther } from "ethers/lib/utils";
 import { ubiquityDollarChainAddresses } from "./constants";
+import { Card } from "./types/entity-types";
 
 interface PriceToValueMap {
   [key: string]: number;

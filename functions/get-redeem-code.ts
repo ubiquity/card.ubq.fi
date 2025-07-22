@@ -1,11 +1,11 @@
-import { verifyMessage } from "@ethersproject/wallet";
+import { verifyMessage } from "ethers/lib/utils";
+import { getCardOrderId } from "../shared/abis/helpers";
+import { getRevealMessageToSign } from "../shared/message-signer";
 import { OrderTransaction, RedeemCode } from "../shared/types/entity-types";
 import { getRedeemCodeParamsSchema } from "../shared/types/params-types";
 import { ReloadlyFailureResponse, ReloadlyRedeemCodeResponse } from "../shared/types/response-types";
-import { AccessToken, commonHeaders, Context } from "./helpers/types";
-import { getRevealMessageToSign } from "../shared/message-signer";
 import { getAccessToken, getReloadlyApiBaseUrl } from "./helpers/shared";
-import { getCardOrderId } from "../shared/abis/helpers";
+import { AccessToken, commonHeaders, Context } from "./helpers/types";
 import { validateEnvVars, validateRequestMethod } from "./helpers/validators";
 
 export async function onRequest(ctx: Context): Promise<Response> {

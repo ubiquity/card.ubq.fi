@@ -1,7 +1,5 @@
-import { Interface, TransactionDescription } from "@ethersproject/abi";
-import { TransactionReceipt, TransactionResponse } from "@ethersproject/providers";
-import { verifyMessage } from "@ethersproject/wallet";
-import { BigNumber } from "ethers";
+import { BigNumber, ethers } from "ethers";
+import { Interface, TransactionDescription, verifyMessage } from "ethers/lib/utils";
 import { getCardOrderId } from "../shared/abis/helpers";
 import { permit2Abi } from "../shared/abis/permit2-abi";
 import { cardTreasuryAddress, permit2Address, ubiquityDollarAllowedChainIds, ubiquityDollarChainAddresses } from "../shared/constants";
@@ -30,7 +28,7 @@ export async function onRequest(ctx: Context): Promise<Response> {
 
     const provider = await useRpcHandler(chainId);
 
-    const [txReceipt, tx, card]: [TransactionReceipt, TransactionResponse, Card] = await Promise.all([
+    const [txReceipt, tx, card]: [ethers.providers.TransactionReceipt, ethers.providers.TransactionResponse, Card] = await Promise.all([
       provider.getTransactionReceipt(txHash),
       provider.getTransaction(txHash),
       getCardById(productId, accessToken),
@@ -189,7 +187,7 @@ async function getExchangeRate(usdAmount: number, fromCurrency: string, accessTo
 
 function validatePermitTransaction(
   txParsed: TransactionDescription,
-  txReceipt: TransactionReceipt,
+  txReceipt: ethers.providers.TransactionReceipt,
   postOrderParams: PostOrderParams,
   card: Card
 ): string | null {
