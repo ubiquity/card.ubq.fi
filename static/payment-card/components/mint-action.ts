@@ -111,6 +111,7 @@ async function checkForMintingDelay(mintParams: MintParams, txId: number) {
     const interval = setInterval(async () => {
       if (await hasMintingFinished(mintParams)) {
         clearInterval(interval);
+        await completeOrder(app.reward.nonce.toString(), txId);
         await init();
       } else {
         toaster.create("info", "Minting is in progress. Please wait...");
