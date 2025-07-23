@@ -1,6 +1,5 @@
 // src/uusd_interaction.ts
-import { ethers, BigNumber, Signer } from "ethers";
-import { Provider, TransactionResponse } from "@ethersproject/providers";
+import { BigNumber, ethers, Signer } from "ethers";
 import { ubiquityDollarChainAddresses } from "../../shared/constants";
 
 // --- Configuration Constants ---
@@ -26,8 +25,8 @@ const provider = new ethers.providers.JsonRpcProvider(GANACHE_RPC_URL);
 // Fix: Interface name `ERC20Interface` to satisfy StrictPascalCase more definitively
 interface Erc20Interface extends ethers.Contract {
   // Changed ERC20 to ERC20Interface
-  approve(spender: string, amount: BigNumber): Promise<TransactionResponse>;
-  transfer(to: string, amount: BigNumber): Promise<TransactionResponse>;
+  approve(spender: string, amount: BigNumber): Promise<ethers.providers.TransactionResponse>;
+  transfer(to: string, amount: BigNumber): Promise<ethers.providers.TransactionResponse>;
   balanceOf(account: string): Promise<BigNumber>;
   decimals(): Promise<number>;
 }
@@ -46,7 +45,7 @@ function isEthersCallExceptionError(error: unknown): error is EthersCallExceptio
 
 // --- Helper Functions to Reduce Cognitive Complexity ---
 
-async function verifyNetwork(currentProvider: Provider): Promise<void> {
+async function verifyNetwork(currentProvider: ethers.providers.Provider): Promise<void> {
   try {
     const network = await currentProvider.getNetwork();
     console.log(`Connected to Network Name: ${network.name}`);
@@ -65,7 +64,7 @@ async function verifyNetwork(currentProvider: Provider): Promise<void> {
   }
 }
 
-async function checkEthBalance(address: string, label: string, currentProvider: Provider): Promise<void> {
+async function checkEthBalance(address: string, label: string, currentProvider: ethers.providers.Provider): Promise<void> {
   const ethBalance = await currentProvider.getBalance(address);
   console.log(`${label}'s current ETH balance (for gas): ${ethers.utils.formatEther(ethBalance)} ETH`);
   if (ethBalance.isZero()) {
