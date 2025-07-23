@@ -1,6 +1,6 @@
 // src/uusd_interaction.ts
 import { BigNumber, ethers, Signer } from "ethers";
-import { ubiquityDollarChainAddresses } from "../../shared/constants";
+import { permit2Address, ubiquityDollarChainAddresses } from "../../shared/constants";
 
 // --- Configuration Constants ---
 const GANACHE_RPC_URL = "http://127.0.0.1:8545";
@@ -15,7 +15,7 @@ const UUSD_ADDRESS = ubiquityDollarChainAddresses[EXPECTED_CHAIN_ID];
 const XDAI_WHALE_ADDRESS = "0xC4E7263Dd870A29f1cFe438D1A7DB48547B16888";
 const UUSD_WHALE_ADDRESS = "0xF95d1352467773676d5435A9ADa94a3701EfDB6c";
 const RECIPIENT_WALLET = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8";
-const PERMIT2_ADDRESS = "0x000000000022D473030F116dDEE9F6B43aC78BA3";
+const PERMIT2_ADDRESS = permit2Address;
 
 // Connect to Ganache
 const provider = new ethers.providers.JsonRpcProvider(GANACHE_RPC_URL);

@@ -3,11 +3,12 @@ import { randomBytes } from "crypto";
 import * as dotenv from "dotenv";
 import { BigNumber, ethers } from "ethers";
 import { log } from "./utils";
+import { permit2Address } from "../../shared/constants";
 dotenv.config();
 
 export type PermitConfig = NodeJS.ProcessEnv;
 
-const PERMIT2_ADDRESS = "0x000000000022D473030F116dDEE9F6B43aC78BA3"; // same on all chains
+const PERMIT2_ADDRESS = permit2Address; // same on all chains
 
 function createProviderAndWallet(permitConfig: PermitConfig) {
   const provider = new ethers.providers.JsonRpcProvider(permitConfig.RPC_PROVIDER_URL);
