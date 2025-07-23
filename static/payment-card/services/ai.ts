@@ -90,9 +90,8 @@ export async function pickSuitableCards(cards: Card[], countryCode: string, amou
     throw new Error("Failed to parse AI response. Please retry later.");
   }
 
-  localStorage.setItem("suitableCards", JSON.stringify(suitableCards));
-
-  if (suitableCards.length) {
+  if (suitableCards && suitableCards.length) {
+    localStorage.setItem("suitableCards", JSON.stringify(suitableCards));
     return cards.find((card) => card.productId === suitableCards[0]) || null;
   }
 
