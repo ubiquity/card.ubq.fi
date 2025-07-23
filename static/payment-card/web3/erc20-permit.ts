@@ -1,8 +1,8 @@
 import { PermitReward } from "@ubiquibot/permit-generation";
-import { permit2Address } from "@ubiquity-dao/rpc-handler";
 import { decodeError } from "@ubiquity-os/ethers-decode-error";
 import { BigNumber, BigNumberish, Contract, ethers } from "ethers";
 import { erc20Abi, permit2Abi } from "../../../shared/abis";
+import { permit2Address } from "../../../shared/constants";
 import { app, AppState } from "../app-state";
 import { errorToast, MetaMaskError, toaster } from "../common-ui/toaster";
 
