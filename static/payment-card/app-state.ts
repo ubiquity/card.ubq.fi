@@ -5,7 +5,6 @@ import { ethers } from "ethers";
 
 export class AppState {
   public claims: PermitReward[] = [];
-  public claimTxs: Record<string, string> = {};
   private _provider!: ethers.providers.JsonRpcProvider;
   private _currentIndex = 0;
   private _signer: ethers.providers.JsonRpcSigner | null = null;

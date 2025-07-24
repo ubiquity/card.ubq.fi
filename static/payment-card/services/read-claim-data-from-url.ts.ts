@@ -29,22 +29,9 @@ export async function readClaimDataFromUrl(app: AppState) {
     console.error(e);
     throw new Error("Invalid permit in the URL.");
   }
-  app.claimTxs = await getClaimedTxs(app);
 
   app.provider = await useRpcHandler(app.networkId ?? app.reward.networkId);
   await checkNetwork(app);
-}
-
-async function getClaimedTxs(app: AppState): Promise<Record<string, string>> {
-  const txs: Record<string, string> = Object.create(null);
-  for (const claim of app.claims) {
-    const { data } = await supabase.from("permits").select("transaction").eq("nonce", claim.nonce.toString());
-
-    if (data?.length === 1 && data[0].transaction !== null) {
-      txs[claim.nonce.toString()] = data[0].transaction as string;
-    }
-  }
-  return txs;
 }
 
 export async function checkNetwork(app: AppState) {
