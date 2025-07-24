@@ -50,7 +50,7 @@ async function getAllCards(accessToken: AccessToken) {
 
   if (!visaResponse.ok) {
     throw new Error(
-      `Error from Reloadly API for mastercard: ${JSON.stringify({
+      `Error from Reloadly API for visa: ${JSON.stringify({
         status: visaResponse.status,
         message: (visaJson as ReloadlyFailureResponse).message,
       })}`
