@@ -18,7 +18,6 @@ export async function isSandbox(): Promise<boolean> {
   const apiUrl = `${getApiBaseUrl()}/get-env`;
 
   const response = await fetch(apiUrl);
-  console.log("response.ok", !!response.ok);
 
   if (response.ok) {
     const responseJson = (await response.json()) as { result: "production" | "sandbox" };
