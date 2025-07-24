@@ -1,4 +1,3 @@
-import { createClient } from "@supabase/supabase-js";
 import { decodePermits } from "@ubiquibot/permit-generation/handlers";
 import { AppState } from "../app-state";
 import { useRpcHandler } from "./use-rpc-handler";
@@ -7,11 +6,6 @@ import { toaster } from "../common-ui/toaster";
 import { getNetworkName, NetworkId } from "@ubiquity-dao/rpc-handler";
 import { switchNetwork } from "../web3/switch-network";
 import { ethers } from "ethers";
-
-declare const SUPABASE_URL: string;
-declare const SUPABASE_ANON_KEY: string;
-
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const urlParams = new URLSearchParams(window.location.search);
 const base64encodedTxData = urlParams.get("claim");

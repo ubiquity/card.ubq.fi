@@ -37,7 +37,6 @@
     "open-source"
   ],
   "dependencies": {
-    "@supabase/supabase-js": "^2.44.4",
     "@ubiquibot/permit-generation": "^1.4.1",
     "@ubiquity-dao/rpc-handler": "^1.3.0",
     "@ubiquity-os/ethers-decode-error": "^1.1.0",
