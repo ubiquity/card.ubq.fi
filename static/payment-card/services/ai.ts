@@ -3,6 +3,7 @@ import { BigNumberish } from "ethers";
 import { isCardAvailable } from "../../../shared/abis/helpers";
 import { Card } from "../../../shared/types/entity-types";
 import { OpenRouterCardPromptResponse } from "../types";
+import { retry } from "@ubiquity-os/plugin-sdk/helpers";
 
 declare const OPENROUTER_API_KEY: string;
 
@@ -46,48 +47,30 @@ export async function pickSuitableCards(cards: Card[], countryCode: string, amou
 
   const prompt = `Find a list of suitable payment cards offered by Reloadly (reloadly.com) from the JSON stringified array given below. It contains redeem instruction, supported locations and brand info about the card. Pick one mastercard or visa card for a User in country ${countryName}. The card must be allowed to be issued to their country and should be usable there. Prefer tokenized card over non-tokenized card. Ignore all other cards that are not visa or mastercard.\nMust reply with json type {productIds: number[]} that contains only the product IDs. Put the most suitable card first, and next suitable after that. If there is no suitable card for the user, just reply with an empty array {productIds: []}. Do not write anything extra in the response.\n${JSON.stringify(minInfoCards)}`;
 
-  const aiModels = [
-    "deepseek/deepseek-r1-0528:free",
-    "deepseek/deepseek-r1:free",
-    "deepseek/deepseek-v3-base:free",
-    "google/gemini-2.0-flash-exp:free",
-    /* cspell:disable-next-line */
-    "mistralai/mistral-nemo:free",
-  ];
-
-  const aiResponses = [];
-
-  for (const model of aiModels) {
-    aiResponses.push(fetchAiResponse(model, prompt));
-  }
-
-  let firstAiResponse;
+  let suitableCards: number[] = [];
   try {
-    firstAiResponse = await Promise.any(aiResponses);
+    suitableCards = await retry<number[]>(
+      async () => {
+        const aiResponse = await fetchAiResponse(prompt);
+        try {
+          const aiResponseJson = (await aiResponse.json()) as OpenRouterCardPromptResponse;
+          console.log("aiResponseJson:", aiResponseJson);
+          const content = JSON.parse(aiResponseJson.choices[0].message.content);
+          suitableCards = content.productIds as number[];
+          console.log("suitableCards:", suitableCards);
+          return suitableCards;
+        } catch (e) {
+          console.error("Failed to parse AI response:", e);
+          throw new Error("Failed to parse AI response. Please retry later.");
+        }
+      },
+      {
+        maxRetries: 2,
+      }
+    );
   } catch (e) {
     console.error("All AI model requests failed:", e);
     throw new Error("Failed to find a suitable card as AI rejected all requests. Please retry later.");
-  }
-
-  if (!firstAiResponse.ok) {
-    throw new Error(
-      `Error from OpenRouterAI API: ${JSON.stringify({
-        status: firstAiResponse.status,
-        message: await firstAiResponse.json(),
-      })}`
-    );
-  }
-
-  let suitableCards: number[] = [];
-  try {
-    const aiResponseJson = (await firstAiResponse.json()) as OpenRouterCardPromptResponse;
-    console.log("aiResponseJson:", aiResponseJson);
-    const content = JSON.parse(aiResponseJson.choices[0].message.content);
-    suitableCards = content.productIds as number[];
-    console.log("suitableCards:", suitableCards);
-  } catch (e) {
-    console.error("Failed to parse AI response:", e);
-    throw new Error("Failed to parse AI response. Please retry later.");
   }
 
   if (suitableCards && suitableCards.length) {
@@ -98,7 +81,7 @@ export async function pickSuitableCards(cards: Card[], countryCode: string, amou
   return null;
 }
 
-async function fetchAiResponse(model: string, prompt: string): Promise<Response> {
+async function fetchAiResponse(prompt: string): Promise<Response> {
   const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -106,7 +89,8 @@ async function fetchAiResponse(model: string, prompt: string): Promise<Response>
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: model,
+      model: "openrouter/auto",
+      models: ["deepseek/deepseek-r1-0528:free", "deepseek/deepseek-v3-base:free", "google/gemini-2.0-flash-exp:free"],
       response_format: { type: "json_object" },
       messages: [
         {
@@ -118,8 +102,8 @@ async function fetchAiResponse(model: string, prompt: string): Promise<Response>
   });
 
   if (!response.ok) {
-    console.error(`OpenRouterAI API request to model ${model} failed with status ${response.status}:`, await response.text());
-    throw new Error(`OpenRouterAI API request to model ${model} failed with status ${response.status}`);
+    console.error(`OpenRouterAI API request failed with status ${response.status}:`, await response.text());
+    throw new Error(`OpenRouterAI API request failed with status ${response.status}`);
   }
 
   return response;
