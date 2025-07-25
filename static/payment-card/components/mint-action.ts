@@ -54,7 +54,7 @@ export async function mintWithPermit(card: Card) {
     return;
   }
 
-  const pendingOrder = await getPendingOrder(app.reward.nonce);
+  const pendingOrder = await getPendingOrder(app.reward.signature);
 
   console.log("Pending order of product:", pendingOrder);
   let tx, txHash;
@@ -74,7 +74,7 @@ export async function mintWithPermit(card: Card) {
     retryCount: pendingOrder && pendingOrder.retryCount ? pendingOrder.retryCount + 1 : 1,
   };
 
-  await updatePendingOrder(app.reward.nonce, mintParams);
+  await updatePendingOrder(app.reward.signature, mintParams);
 
   if (tx) {
     await tx.wait();
@@ -105,13 +105,13 @@ export async function mintWithPermit(card: Card) {
 
 async function checkForMintingDelay(mintParams: MintParams, txId: number) {
   if (await hasMintingFinished(mintParams)) {
-    await completeOrder(app.reward.nonce.toString(), txId);
+    await completeOrder(app.reward.signature, txId);
     await init();
   } else {
     const interval = setInterval(async () => {
       if (await hasMintingFinished(mintParams)) {
         clearInterval(interval);
-        await completeOrder(app.reward.nonce.toString(), txId);
+        await completeOrder(app.reward.signature, txId);
         await init();
       } else {
         toaster.create("info", "Minting is in progress. Please wait...");

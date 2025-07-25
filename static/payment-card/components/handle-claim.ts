@@ -9,7 +9,7 @@ export async function handleClaim(contentElement: HTMLElement) {
     throw new Error("The permit is for an unsupported token to mint a payment card.");
   }
 
-  const completedOrder = await getCompletedOrder(app.reward.nonce);
+  const completedOrder = await getCompletedOrder(app.reward.signature);
   if (completedOrder) {
     contentElement.innerHTML = await getOrderHtml(completedOrder);
     addOrderEvents(completedOrder);
