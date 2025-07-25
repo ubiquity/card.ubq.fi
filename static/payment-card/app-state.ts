@@ -1,7 +1,6 @@
-import { getNetworkExplorer } from "@ubiquity-dao/rpc-handler";
-import { convertToNetworkId } from "./services/use-rpc-handler";
 import { PermitReward } from "@ubiquibot/permit-generation";
 import { ethers } from "ethers";
+import { getNetworkInfo } from "../../shared/chains";
 
 export class AppState {
   public claims: PermitReward[] = [];
@@ -42,12 +41,12 @@ export class AppState {
   }
 
   get currentExplorerUrl(): string {
-    const networkId = convertToNetworkId(this.reward.networkId);
-    if (!this.reward || !getNetworkExplorer(networkId)) {
+    const explorerUrl = getNetworkInfo(this.reward.networkId).blockExplorerUrls[0];
+    if (!this.reward || !explorerUrl) {
       return "https://blockscan.com";
     }
 
-    return getNetworkExplorer(networkId)[0].url;
+    return explorerUrl;
   }
 }
 

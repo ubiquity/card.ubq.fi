@@ -1,11 +1,11 @@
 import { decodePermits } from "@ubiquibot/permit-generation/handlers";
-import { AppState } from "../app-state";
-import { useRpcHandler } from "./use-rpc-handler";
-import { connectWallet } from "../web3/connect-wallet";
-import { toaster } from "../common-ui/toaster";
-import { getNetworkName, NetworkId } from "@ubiquity-dao/rpc-handler";
-import { switchNetwork } from "../web3/switch-network";
 import { ethers } from "ethers";
+import { AppState } from "../app-state";
+import { toaster } from "../common-ui/toaster";
+import { connectWallet } from "../web3/connect-wallet";
+import { switchNetwork } from "../web3/switch-network";
+import { useRpcHandler } from "./use-rpc-handler";
+import { getNetworkInfo } from "../../../shared/chains";
 
 const urlParams = new URLSearchParams(window.location.search);
 const base64encodedTxData = urlParams.get("claim");
@@ -42,7 +42,7 @@ export async function checkNetwork(app: AppState) {
       switchNetwork(new ethers.providers.Web3Provider(window.ethereum), appId).catch((error) => {
         console.error(error);
         if (app.networkId !== null) {
-          toaster.create("error", `Please switch to the ${getNetworkName(String(appId) as NetworkId)} network to claim this reward.`);
+          toaster.create("error", `Please switch to the ${getNetworkInfo(appId).chainName} network to claim this reward.`);
         }
       });
 
