@@ -4,7 +4,7 @@ import { AppState } from "../app-state";
 import { toaster } from "../common-ui/toaster";
 import { connectWallet } from "../web3/connect-wallet";
 import { switchNetwork } from "../web3/switch-network";
-import { useRpcHandler } from "./use-rpc-handler";
+import { createProvider } from "./use-rpc-handler";
 import { getNetworkInfo } from "../../../shared/chains";
 
 const urlParams = new URLSearchParams(window.location.search);
@@ -24,7 +24,7 @@ export async function readClaimDataFromUrl(app: AppState) {
     throw new Error("Invalid permit in the URL.");
   }
 
-  app.provider = await useRpcHandler(app.networkId ?? app.reward.networkId);
+  app.provider = await createProvider(app.networkId ?? app.reward.networkId);
   await checkNetwork(app);
 }
 

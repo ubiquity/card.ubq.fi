@@ -1,6 +1,6 @@
 import { ethers } from "ethers";
 
-export async function useRpcHandler(networkId: number) {
+export async function createProvider(networkId: number) {
   return new ethers.providers.JsonRpcProvider({ url: getRpcUrl(networkId), skipFetchSetup: true });
 }
 

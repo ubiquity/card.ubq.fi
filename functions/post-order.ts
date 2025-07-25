@@ -8,7 +8,7 @@ import { getCardValue, isClaimableForAmount, isClaimableForToken } from "../shar
 import { Card, ExchangeRate } from "../shared/types/entity-types";
 import { PostOrderParams, postOrderParamsSchema } from "../shared/types/params-types";
 import { ReloadlyFailureResponse, ReloadlyOrderResponse } from "../shared/types/response-types";
-import { useRpcHandler } from "../static/payment-card/services/use-rpc-handler";
+import { createProvider } from "../static/payment-card/services/use-rpc-handler";
 import { getAccessToken, getReloadlyApiBaseUrl } from "./helpers/shared";
 import { AccessToken, commonHeaders, Context } from "./helpers/types";
 import { validateEnvVars, validateRequestMethod } from "./helpers/validators";
@@ -26,7 +26,7 @@ export async function onRequest(ctx: Context): Promise<Response> {
     }
     const { productId, txHash, chainId, retryCount } = result.data;
 
-    const provider = await useRpcHandler(chainId);
+    const provider = await createProvider(chainId);
 
     const [txReceipt, tx, card]: [ethers.providers.TransactionReceipt, ethers.providers.TransactionResponse, Card] = await Promise.all([
       provider.getTransactionReceipt(txHash),
