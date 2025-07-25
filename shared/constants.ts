@@ -12,10 +12,3 @@ export const ubiquityDollarChainAddresses: Record<number, string> = {
   100: "0xC6ed4f520f6A4e4DC27273509239b7F8A68d2068",
   31337: "0xC6ed4f520f6A4e4DC27273509239b7F8A68d2068",
 };
-
-export const networkRpcs: Record<number, string> = {
-  1: "https://gateway.tenderly.co/public/mainnet",
-  5: "https://eth-goerli.public.blastapi.io",
-  100: "https://rpc.gnosischain.com",
-  31337: "http://127.0.0.1:8545",
-};
