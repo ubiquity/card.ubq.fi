@@ -8,7 +8,7 @@ import { getCardValue, isClaimableForAmount, isClaimableForToken } from "../shar
 import { Card, ExchangeRate } from "../shared/types/entity-types";
 import { PostOrderParams, postOrderParamsSchema } from "../shared/types/params-types";
 import { ReloadlyFailureResponse, ReloadlyOrderResponse } from "../shared/types/response-types";
-import { createProvider } from "../static/payment-card/services/use-rpc-handler";
+import { createProvider } from "../shared/rpc";
 import { getAccessToken, getReloadlyApiBaseUrl } from "./helpers/shared";
 import { AccessToken, commonHeaders, Context } from "./helpers/types";
 import { validateEnvVars, validateRequestMethod } from "./helpers/validators";

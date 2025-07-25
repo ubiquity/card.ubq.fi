@@ -1,4 +1,4 @@
-import { getRpcUrl } from "../static/payment-card/services/use-rpc-handler";
+import { getRpcUrl } from "./rpc";
 
 export function getNetworkInfo(networkId: number): ChainInfo {
   if (networkInfo[networkId]) {

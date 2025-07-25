@@ -4,7 +4,7 @@ import { AppState } from "../app-state";
 import { toaster } from "../common-ui/toaster";
 import { connectWallet } from "../web3/connect-wallet";
 import { switchNetwork } from "../web3/switch-network";
-import { createProvider } from "./use-rpc-handler";
+import { createProvider } from "../../../shared/rpc";
 import { getNetworkInfo } from "../../../shared/chains";
 
 const urlParams = new URLSearchParams(window.location.search);
