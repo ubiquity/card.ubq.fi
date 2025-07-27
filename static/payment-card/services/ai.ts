@@ -60,8 +60,8 @@ export async function pickSuitableCards(cards: Card[], countryCode: string, amou
           console.log("suitableCards:", suitableCards);
           return suitableCards;
         } catch (e) {
-          console.error("Failed to get an expected response from AI:", e);
-          throw new Error("Failed to get an expected response from AI. Please retry later.");
+          console.error("Failed to get the expected response from AI:", e);
+          throw new Error("Failed to get the expected response from AI. Please retry later.");
         }
       },
       {
