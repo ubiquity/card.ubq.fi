@@ -89,8 +89,8 @@ async function fetchAiResponse(prompt: string): Promise<Response> {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "openrouter/auto",
-      models: ["deepseek/deepseek-r1-0528:free", "deepseek/deepseek-v3-base:free", "google/gemini-2.0-flash-exp:free"],
+      model: "deepseek/deepseek-r1-0528:free",
+      models: ["deepseek/deepseek-r1:free", "deepseek/deepseek-v3-base:free", "google/gemini-2.0-flash-exp:free"],
       response_format: { type: "json_object" },
       messages: [
         {
