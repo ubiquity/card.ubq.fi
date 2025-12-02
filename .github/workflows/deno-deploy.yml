@@ -1,0 +1,38 @@
+name: Deploy (Deno Deploy)
+
+on:
+  push:
+    branches: [development]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    uses: ubiquity/deno-deploy-workflow/.github/workflows/deno-deploy-reusable.yml@main
+    secrets: inherit
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+      BACKEND_URL: https://pay.ubq.fi
+    with:
+      project: card-ubq-fi
+      preview_project: card-ubq-fi-preview
+      entrypoint: serve.ts
+      install_command: |
+        yarn install --frozen-lockfile
+      build_command: |
+        yarn build
+      env_var_keys: |
+        SUPABASE_URL
+        SUPABASE_ANON_KEY
+        BACKEND_URL
+      node_version: "20.x"
+      deno_version: v2.x
+      deployctl_version: "1.12.0"
+      prod_branch: development
+      include: |
+        static/**
+        build/**
+      exclude: |
+        node_modules
+        tests
+        cypress
