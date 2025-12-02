@@ -7,31 +7,65 @@ on:
 
 jobs:
   deploy:
-    uses: ubiquity/deno-deploy-workflow/.github/workflows/deno-deploy-reusable.yml@main
-    secrets: inherit
-    with:
-      project: card-ubq-fi
-      preview_project: card-ubq-fi-preview
-      entrypoint: serve.ts
-      install_command: |
-        yarn install --frozen-lockfile
-      build_command: |
-        yarn build
-      build_env: |
-        SUPABASE_URL=${{ secrets.SUPABASE_URL }}
-        SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}
-        BACKEND_URL=https://pay.ubq.fi
-      runtime_env: |
-        SUPABASE_URL=${{ secrets.SUPABASE_URL }}
-        SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}
-        BACKEND_URL=https://pay.ubq.fi
-      node_version: "20.10.0"
-      deno_version: v2.x
-      deployctl_version: "1.12.0"
-      prod_branch: development
-      include: |
-        static/**
-      exclude: |
-        node_modules
-        tests
-        cypress
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      PROJECT: card-ubq-fi
+      PREVIEW_PROJECT: card-ubq-fi-preview
+      PROD_BRANCH: development
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+      BACKEND_URL: https://pay.ubq.fi
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: 2.x
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.10.0
+          cache: yarn
+
+      - name: Install deployctl
+        run: |
+          set -euo pipefail
+          deno install -gArf jsr:@deno/deployctl@1.12.0
+          echo "${HOME}/.deno/bin" >> "$GITHUB_PATH"
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build
+        run: yarn build
+
+      - name: Deploy
+        env:
+          DENO_DEPLOY_TOKEN: ${{ secrets.DENO_DEPLOY_TOKEN }}
+        run: |
+          set -euo pipefail
+          target="$PREVIEW_PROJECT"
+          prod_flag=""
+          if [ "${GITHUB_REF_NAME}" = "$PROD_BRANCH" ]; then
+            target="$PROJECT"
+            prod_flag="--prod"
+          fi
+
+          deployctl deploy \
+            --project="$target" \
+            $prod_flag \
+            --entrypoint=serve.ts \
+            --root="." \
+            --token="$DENO_DEPLOY_TOKEN" \
+            --include="serve.ts" \
+            --include="deno.json" \
+            --include="static/**" \
+            --env-var="SUPABASE_URL=${SUPABASE_URL}" \
+            --env-var="SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}" \
+            --env-var="BACKEND_URL=${BACKEND_URL}"
