@@ -61,7 +61,7 @@ jobs:
           excludes=()
           for path in "${ignored_paths[@]}"; do
             case "$path" in
-              out|out/*|static/dist|static/dist/*|static/bundles|static/bundles/*) continue ;;
+              out|out/*|static/out|static/out/*|static/dist|static/dist/*|static/bundles|static/bundles/*) continue ;;
             esac
             excludes+=("--exclude=${path}")
           done
@@ -74,6 +74,7 @@ jobs:
             --token="$DENO_DEPLOY_TOKEN" \
             --include="." \
             --include="out/**" \
+            --include="static/out/**" \
             --include="static/dist/**" \
             --include="static/bundles/**" \
             "${excludes[@]}" \
