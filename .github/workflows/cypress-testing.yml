@@ -30,7 +30,7 @@ jobs:
 
       - name: Wait for Anvil
         run: |
-          for i in {1..30}
+          for _ in {1..30}
           do
             if curl -s http://localhost:8545; then
               break
