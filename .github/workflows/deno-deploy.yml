@@ -23,5 +23,11 @@ jobs:
         STATIC_DIR=static
       include: |
         static/**
+      debug_fetch_paths: |
+        /
+        /favicon.svg
+        /out/bundles.css
+        /out/rewards.js
+      debug_fetch_fail: true
     secrets:
       DENO_DEPLOY_TOKEN: ${{ secrets.DENO_DEPLOY_TOKEN }}
