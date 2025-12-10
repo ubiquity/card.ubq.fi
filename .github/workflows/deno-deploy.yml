@@ -12,10 +12,9 @@ jobs:
       entrypoint: serve.ts
       bun_version: 1.2.x
       deno_version: 2.x
-      install_command: bun install
+      install_command: HUSKY=0 bun install --registry=https://registry.npmjs.org
       build_command: bun run build
       build_env: |
-        HUSKY=0
         SUPABASE_URL=$SUPABASE_URL
         SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
         BACKEND_URL=https://pay.ubq.fi
