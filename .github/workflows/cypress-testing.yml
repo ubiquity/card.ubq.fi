@@ -10,9 +10,9 @@ jobs:
   cypress-run:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/setup-node@v4
+      - uses: oven-sh/setup-bun@v2
         with:
-          node-version: 20.10.0
+          bun-version: 1.3.3
       - uses: actions/checkout@v4
         with:
           submodules: recursive
@@ -23,10 +23,10 @@ jobs:
           version: nightly
 
       - name: Install dependencies
-        run: yarn install
+        run: HUSKY=0 bun install --frozen-lockfile --registry=https://registry.npmjs.org
 
       - name: Start Anvil
-        run: yarn test:anvil &
+        run: bun run test:anvil &
 
       - name: Wait for Anvil
         run: |
@@ -39,13 +39,14 @@ jobs:
           done || exit 1
 
       - name: Funding
-        run: yarn test:fund
+        run: bun run test:fund
 
       - name: Cypress run
         uses: cypress-io/github-action@v6
         with:
-          build: yarn run build
-          start: npx wrangler pages dev static --port 8080 --binding USE_RELOADLY_SANDBOX=true RELOADLY_API_CLIENT_ID="$RELOADLY_SANDBOX_API_CLIENT_ID" RELOADLY_API_CLIENT_SECRET="$RELOADLY_SANDBOX_API_CLIENT_SECRET" &
+          install: false
+          build: bun run build
+          start: bunx wrangler pages dev static --port 8080 --binding USE_RELOADLY_SANDBOX=true RELOADLY_API_CLIENT_ID="$RELOADLY_SANDBOX_API_CLIENT_ID" RELOADLY_API_CLIENT_SECRET="$RELOADLY_SANDBOX_API_CLIENT_SECRET" &
 
         env:
           RELOADLY_SANDBOX_API_CLIENT_ID: ${{ secrets.RELOADLY_SANDBOX_API_CLIENT_ID }}
