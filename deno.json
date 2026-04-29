@@ -4,6 +4,7 @@
     "serve": "deno run --allow-all serve.ts"
   },
   "deploy": {
+    "org": "ubiquity-dao",
     "install": "deno install",
     "build": "deno task build",
     "runtime": {
