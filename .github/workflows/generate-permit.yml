@@ -21,15 +21,15 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          node-version: 20.10.0
+          bun-version: 1.3.3
 
       - name: Generate Claimable Permit
         run: |
-          yarn
-          yarn start:sign
+          HUSKY=0 bun install --frozen-lockfile --registry=https://registry.npmjs.org
+          bun run start:sign
         env:
           BENEFICIARY_ADDRESS: ${{ github.event.inputs.beneficiary }}
           PAYMENT_TOKEN_ADDRESS: "0xC6ed4f520f6A4e4DC27273509239b7F8A68d2068"

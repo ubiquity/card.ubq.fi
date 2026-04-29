@@ -12,15 +12,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/setup-node@v4
+      - uses: oven-sh/setup-bun@v2
         with:
-          node-version: "20.10.0"
+          bun-version: 1.3.3
 
       - name: Checkout code
         uses: actions/checkout@v3
 
       - name: Install dependencies
-        run: yarn
+        run: HUSKY=0 bun install --frozen-lockfile --registry=https://registry.npmjs.org
 
       - name: Run tests
-        run: npx vitest --run
+        run: bunx vitest --run

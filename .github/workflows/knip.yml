@@ -10,23 +10,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # needed to use yarn v4
-      - name: Enable corepack
-        run: corepack enable
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          node-version: 20.10.0
+          bun-version: 1.3.3
 
       - name: Install toolchain
-        run: yarn install
+        run: HUSKY=0 bun install --frozen-lockfile --registry=https://registry.npmjs.org
 
       - name: Store PR number
         run: echo ${{ github.event.number }} > pr-number.txt
 
       - name: Run Knip
-        run: yarn knip || yarn knip --reporter json > knip-results.json
+        run: bun run knip || bun run knip --reporter json > knip-results.json
 
       - name: Upload knip result
         if: failure()

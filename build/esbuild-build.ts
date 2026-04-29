@@ -1,7 +1,7 @@
-import { execSync } from "child_process";
+import { execSync } from "node:child_process";
 import { config } from "dotenv";
 import esbuild from "esbuild";
-import { appendFileSync, readFileSync, writeFileSync } from "fs";
+import { appendFileSync, readFileSync, writeFileSync } from "node:fs";
 
 // CSS files in order
 const cssFiles: string[] = [
@@ -37,7 +37,7 @@ export const esBuildContext: esbuild.BuildOptions = {
   outdir: "static/out",
   entryNames: "[dir]", // Ensure the CSS is named bundles.css
   define: createEnvDefines(["SUPABASE_URL", "SUPABASE_ANON_KEY", "BACKEND_URL"], {
-    commitHash: execSync(`git rev-parse --short HEAD`).toString().trim(),
+    commitHash: getCommitHash(),
   }),
   plugins: [
     {
@@ -57,6 +57,21 @@ export const esBuildContext: esbuild.BuildOptions = {
     },
   ],
 };
+
+function getCommitHash(): string {
+  const ciSha = process.env.GITHUB_SHA;
+  if (ciSha) return ciSha.slice(0, 7);
+
+  try {
+    return execSync("git rev-parse --short HEAD", {
+      stdio: ["ignore", "pipe", "ignore"],
+    })
+      .toString()
+      .trim();
+  } catch {
+    return "unknown";
+  }
+}
 
 esbuild
   .build(esBuildContext)
