@@ -1,5 +1,6 @@
 {
   "tasks": {
-    "serve": "deno run --allow-read --allow-net --allow-env serve.ts"
+    "build": "deno run -A build/esbuild-build.ts",
+    "serve": "deno run --allow-all serve.ts"
   }
 }
