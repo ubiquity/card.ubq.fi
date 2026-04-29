@@ -2,5 +2,14 @@
   "tasks": {
     "build": "deno run -A build/esbuild-build.ts",
     "serve": "deno run --allow-all serve.ts"
+  },
+  "deploy": {
+    "install": "deno install",
+    "build": "deno task build",
+    "runtime": {
+      "type": "static",
+      "cwd": "./static",
+      "spa": true
+    }
   }
 }
