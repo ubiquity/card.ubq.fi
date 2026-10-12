@@ -168,3 +168,9 @@ In this case, the production deploy of the backend is served to your frontend an
 
 There are some `/shared` files for frontend & backend. To make sure you didn't break anything in backend, you should occasionally run
 `yarn test:unit`
+
+## Hosting (2026-10-12)
+
+Served by the Cloudflare Workers static-assets worker `card-ubq-fi`
+(`wrangler.toml`), routed at `card.ubq.fi/*` with single-page fallback.
+Deno Deploy is no longer used (shutdown April 2027).
